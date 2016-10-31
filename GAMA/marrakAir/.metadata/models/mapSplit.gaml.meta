@@ -1,0 +1,10 @@
+#
+#Fri Oct 07 12:43:02 CEST 2016
+operators=-~as~envelope~+~internal_at~>~length~point~sqrt~*~/~<~polygon~.~accumulate
+plugins=msi.gama.core
+attributes=points~x~y
+statements=action~arg~write~let~loop~if~set~else~return~aspect~draw~init~create~ask~do~save~output~display~display_population
+skills=reflex
+constants=red~black~m
+types=string~list~int~unknown~file~geometry~point~agent~rgb~float~bool~date~container
+actions=debug~error~tell~write~die~_init_~_step_~halt~pause
