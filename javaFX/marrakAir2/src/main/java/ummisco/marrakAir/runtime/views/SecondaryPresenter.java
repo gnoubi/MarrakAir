@@ -1,3 +1,4 @@
+
 package ummisco.marrakAir.runtime.views;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -55,10 +56,10 @@ public class SecondaryPresenter {
                appBar.setTitleText("Connection");
                
                // add prompt text to the textfields
-               hote.setPromptText(GamePresenter.getConnection().SERVER_URL);
-               port.setPromptText(GamePresenter.getConnection().SERVER_PORT);
-               password.setPromptText(GamePresenter.getConnection().PASSWORD);
-               user.setPromptText(GamePresenter.getConnection().LOGIN);
+               hote.setPromptText(GamePresenter.getConnection()==null?"localhost":GamePresenter.getConnection().SERVER_URL);
+               port.setPromptText(GamePresenter.getConnection()==null?"1889":GamePresenter.getConnection().SERVER_PORT);
+               password.setPromptText(GamePresenter.getConnection()==null?"password":GamePresenter.getConnection().PASSWORD);
+               user.setPromptText(GamePresenter.getConnection()==null?"admin":GamePresenter.getConnection().LOGIN);
                
                BooleanBinding binding = new BooleanBinding() {
                	{

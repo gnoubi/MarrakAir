@@ -43,7 +43,10 @@ public class GluonApplication extends MobileApplication {
 		} catch (MqttException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.out.println("pb de connexion");
+			
 		}
+		
 		//addViewFactory(PRIMARY_VIEW, () -> (View) new PrimaryView().getView());
 		//this.addLayerFactory(PRIMARY_VIEW, (VBox) new GameView().); 
 		Supplier<View> v1 = new Supplier<View>() {
@@ -63,19 +66,25 @@ public class GluonApplication extends MobileApplication {
 			}
 		};
 		addViewFactory(PRIMARY_VIEW, v1);
+		System.out.println("pb de connexion 1");
+		
 		addViewFactory(SECONDARY_VIEW, v2);
-
+		System.out.println("pb de connexion 2");
+		
 		final NavigationDrawer drawer = new NavigationDrawer();
 
 		NavigationDrawer.Header header = new NavigationDrawer.Header("MarrakAir",
 				"Smart city Participative project",
 				new Avatar(21, new Image(GluonApplication.class.getResourceAsStream("/icon.png"))));
 		drawer.setHeader(header);
+		System.out.println("pb de connexion 3");
+		
 
 		final Item primaryItem = new Item("Game", MaterialDesignIcon.HOME.graphic());
 		final Item secondaryItem = new Item("Configuration", MaterialDesignIcon.DASHBOARD.graphic());
 		drawer.getItems().addAll(primaryItem, secondaryItem);
-
+		System.out.println("pb de connexion 4");
+		
 		ChangeListener<? super Node> nd1 = new ChangeListener<Node>() {
 
 			@Override
@@ -94,16 +103,22 @@ public class GluonApplication extends MobileApplication {
 				return  new SidePopupView(drawer);
 			}
 		};
-
+		System.out.println("pb de connexion 5");
+		
 		addLayerFactory(MENU_LAYER, v3);
-
+		System.out.println("pb de connexion 6");
+		
 
 	}
 
 	
 	@Override
 	public void postInit(Scene scene) {
+		System.out.println("pb de connexion 7b");
+		
 		Swatch.GREEN.assignTo(scene);
+		System.out.println("pb de connexion 7");
+		
 		((Stage) scene.getWindow()).setHeight(1024);
 		((Stage) scene.getWindow()).setWidth(768);
 		scene.getStylesheets().add(GluonApplication.class.getResource("style.css").toExternalForm());

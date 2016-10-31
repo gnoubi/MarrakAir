@@ -83,19 +83,25 @@ public class GamePresenter {
 	private void valueChanged(ValueChangedEvent evt)
 	{
 		 System.out.println("Changement de valeur "+ evt.getAgentName()+" attribut:"+evt.getAgentAttributeName()+" valeur:"+evt.getValue());
-		 try {
-			this.connection.sendMessage(evt.getAgentAttributeName(), evt.getValue());
-			System.out.println("message sended");
-		} catch (MqttException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(this.connection!=null)
+		{
+			 try {
+					this.connection.sendMessage(evt.getAgentAttributeName(), evt.getValue());
+					System.out.println("message sended");
+				} catch (MqttException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		}
+		
 		 
 	}
 
 	@FXML
 	void buttonTrafficPressed(ActionEvent event)
 	{
+		if(this.connection!=null)
+		{
 		 try {
 				this.connection.sendMessage("show_trafic", traficShow?0:1);
 				 traficShow = !	traficShow ;
@@ -113,12 +119,15 @@ public class GamePresenter {
 		 {
 			 showTrafficB.setText("Afficher le trafic"); 
 		 }
-		 
+		}
 	}
 
 	@FXML
 	void buttonPollutionPressed(ActionEvent event)
 	{
+		if(this.connection!=null)
+		{
+		
 		 try {
 				this.connection.sendMessage("show_pollution", pollutantShow?0:1);
 				pollutantShow = !	pollutantShow ;
@@ -136,13 +145,14 @@ public class GamePresenter {
 		 {
 			 showPollutantB.setText("Afficher la pollution"); 
 		 }
+		}
 		 
 	}
 
 	@FXML
 	public void initialize() {
     	
-    	if(connection.isConnected()){
+    	if(connection!=null&&connection.isConnected()){
     		System.out.println("doing something");
     		this.vehicleEnergy.registerConnection(connection);
             this.vehicleType.registerConnection(connection);
