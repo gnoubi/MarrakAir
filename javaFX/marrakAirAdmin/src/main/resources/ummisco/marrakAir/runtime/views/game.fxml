@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.gluonhq.charm.glisten.mvc.View?>
+<?import javafx.scene.chart.AreaChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.Button?>
+<?import com.gluonhq.charm.glisten.control.Icon?>
+
+
+<View fx:id="game" maxHeight="-Infinity" maxWidth="-Infinity"
+	minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0"
+	prefWidth="350.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="ummisco.marrakAir.runtime.views.GamePresenter">
+	<center>
+		<VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
+			<padding>
+				<Insets bottom="10" left="10" right="10" top="10" />
+			</padding>
+			<children>
+				<Button fx:id="showPollutantB" mnemonicParsing="false"
+					text="Masquer la pollution" onAction="#buttonPollutionPressed">
+					<graphic>
+						<Icon content="LANGUAGE" />
+					</graphic>
+				</Button>
+				<Button fx:id="showTrafficB" mnemonicParsing="false"
+					text="Masquer le trafic" onAction="#buttonTrafficPressed">
+					<graphic>
+						<Icon content="LANGUAGE" />
+					</graphic>
+				</Button>
+
+			</children>
+
+		</VBox>
+	</center>
+</View>
