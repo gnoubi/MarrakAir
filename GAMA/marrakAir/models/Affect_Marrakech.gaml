@@ -46,6 +46,8 @@ global
 	file node_shape <- file("../includes/SIG_demonstrateur/nodes_gama.shp");
 	file PM <- file("../includes/SIG_demonstrateur/PM_T.shp");
 	file cell_shape <- file("../includes/SIG_demonstrateur/road_cells.shp");
+	file water <- file("../includes/SIG_demonstrateur/water.shp");
+	file airport <- file("../includes/SIG_demonstrateur/airport.shp");
 	file shape_file_buildings <- file("../includes/SIG_simu/buildings_gama.shp");
 	file shape_file_bound <- file("../includes/reperes.shp");
 	
@@ -156,6 +158,73 @@ global
 	
 	init
 	{
+		do initialize();
+		create userAgent number:1
+		{
+			do connect to:"localhost";
+			do expose variables:["gasoline_population","diesel_population"] with_name:"energy";
+			do expose variables:["truck_population","car_population","motorbike_population"] with_name:"typeVehicle";
+			do expose variables:["my_date","pollution_nox_max","pollution_nox_intanstanee", "pollution_particule_max", "pollution_particule_instantanee" ] with_name:"pollutantGraph";
+			do listen with_name:"slide_energy" store_to:"selected_energy";
+			do listen with_name:"slide_vehicule" store_to:"selected_vehicule";
+			do listen with_name:"slide_speed" store_to:"selected_speed";
+			do listen with_name:"show_pollution" store_to:"selected_pollution";
+			do listen with_name:"show_trafic" store_to:"selected_trafic";
+			do listen with_name:"reset" store_to:"reset_simulation";
+		}
+		
+	}
+	
+	
+	action reset
+	{
+		ask carHierarchyChange
+		{
+			do die;
+		}
+		ask carRandomChange
+		{
+			do die;
+		}
+		ask crossroad 
+		{
+			do die;
+		}
+		ask building
+		{
+			do die;
+		}
+		ask landscape
+		{
+			do die;
+		}
+		
+		ask carCounter
+		{
+			do die;
+		}
+		
+		ask pollutant_grid
+		{
+			do die;
+		}
+		
+		ask bound
+		{
+			do die;
+		}
+		ask road
+		{
+			do die;
+		}
+		
+		do initialize();
+		
+		
+	}
+	
+	action initialize
+	{
 		time <- 8#h;
 		copert <-[];
 		//Choix du parc automobile en fonction du parametres véhicle_year
@@ -181,6 +250,15 @@ global
 			if type = 'tall' {
 				height<-100 +rnd(10) ;
 			}
+		}
+		
+		create landscape from:water
+		{
+			mycolor <- #blue;
+		}
+		create landscape from: airport
+		{
+			mycolor <- #white;
 		}
 		create pollutant_grid from:cell_shape{
 			neighboor_buildings <- building at_distance 70#m;
@@ -262,18 +340,6 @@ global
 		roadToDisplay <-(road first_with(each.mid = 305882936 ));	
 		//write copert;
 		
-		create userAgent number:1
-		{
-			do connect to:"localhost";
-			do expose variables:["gasoline_population","diesel_population"] with_name:"energy";
-			do expose variables:["truck_population","car_population","motorbike_population"] with_name:"typeVehicle";
-			do expose variables:["my_date","pollution_nox_max","pollution_nox_intanstanee", "pollution_particule_max", "pollution_particule_instantanee" ] with_name:"pollutantGraph";
-			do listen with_name:"slide_energy" store_to:"selected_energy";
-			do listen with_name:"slide_vehicule" store_to:"selected_vehicule";
-			do listen with_name:"slide_speed" store_to:"selected_speed";
-			do listen with_name:"show_pollution" store_to:"selected_pollution";
-			do listen with_name:"show_trafic" store_to:"selected_trafic";
-		}
 		 
 		
 	} //init 
@@ -290,7 +356,7 @@ global
 	} 
 } //global
 
-species bound {
+species bound schedules:[] {
 	
 	/*reflex doDie when: cycle=2{
 		do die;
@@ -322,6 +388,7 @@ species userAgent skills:[remoteGUI]
 	float selected_speed_old <- 0;
 	float selected_trafic <- -1;
 	float selected_pollution <- -1;
+	float reset_simulation <- 0;
 	
 	//float polution_particule_intantanee <- 0 ;
 	reflex update_data when: (cycle mod 12) = 0
@@ -337,38 +404,42 @@ species userAgent skills:[remoteGUI]
 		pollution_particule_instantanee <- mean(list(pollutant_grid collect(each.pollutant[world.pollutentIndex("pm")])));
 		my_date <- cycle;
 		
-		if(selected_energy != selected_energy_old)
-		{
+		if(selected_energy != selected_energy_old) {
 			energy <- selected_energy / 100;
 			selected_energy_old <- selected_energy;
 		}
 		
-		if(selected_vehicule != selected_vehicule_old)
-		{
+		if(selected_vehicule != selected_vehicule_old) {
 			percent_of_car <- selected_vehicule/100;
 			selected_vehicule_old <- selected_vehicule;
 		}
-		if(selected_speed != selected_speed_old)
-		{
+		
+		if(selected_speed != selected_speed_old) {
 			max_speed <- selected_speed#km/#h;
 			selected_speed_old <- selected_speed;
 		}
-		if(selected_trafic >=0)
-		{
+		
+		if(selected_trafic >=0) {
 			show_trafic <- selected_trafic = 1;
 			selected_trafic <- -1.0;
 		}
 		
-		if(selected_pollution >=0)
-		{
+		if(selected_pollution >=0) {
 			show_pollution <- selected_pollution = 1;
 			selected_pollution <- -1.0;
+		}
+		
+		if(reset_simulation = 1) {
+			ask world {
+				do reset;
+			}
+				
 		}
 		
 	}
 }
 
-species pollutant_grid 
+species pollutant_grid schedules:[]
 	{
 		list<float> pollutant <- list_with(6,0.0);
 		list<building> neighboor_buildings;
@@ -377,7 +448,15 @@ species pollutant_grid
 			draw shape color:rgb(0,255-int((1-pollutant[world.pollutentIndex("nox")]/maxNox)*255),0) ;
 		}
 	}
-
+species landscape schedules:[]
+{
+	rgb mycolor <- #blue;
+	
+	aspect base 
+	{
+		draw shape color:mycolor;
+	}
+}
 species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[]
 {
 	crossroad fcrossroad;
@@ -951,13 +1030,14 @@ experiment affect type:gui
 	
 	output {
 
-		display Suivi_Vehicules_3D  type:opengl background:#white use_shader: true keystone: true //refresh_every:15 
+		display Suivi_Vehicules_3D  type:opengl background:#black //use_shader: true keystone: true //refresh_every:15 
 		{
 			//grid parcArea;
 			species bound aspect: base;
-			species building aspect:base; // transparency:0.5;
 		//	species pollutant_grid aspect:nox_aspect ;
 			species road aspect:base;
+			species building aspect:base; // transparency:0.5;
+			species landscape aspect:base;
 			species carCounter aspect:base;
 			//species crossroad aspect:base;
 			species car  aspect:ghost;
