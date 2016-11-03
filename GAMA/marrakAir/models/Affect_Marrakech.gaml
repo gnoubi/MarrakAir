@@ -16,6 +16,16 @@ model affectation
 
 global
 {
+	int MOTORBYKE_ID <- 0;
+	int CAR_ID <- 1;
+	int TRUCK_ID <- 2;
+	
+	
+	float MOTORBYKE_COEF <- 2;
+	float CAR_COEF <- 1;
+	float TRUCK_COEF <- 1;
+	
+	
 	// Pas-de-temps à modifier en fonction de la taille du réseau
 	float stepDuration <- 5#s; //#mn ; 	
 	
@@ -63,8 +73,10 @@ global
 	
 	//Matrices de COPERT
 	map<string,map<float,list<list<float>>>> copert;
+	map<string,map<float,list<list<float>>>> copert07;
+	map<string,map<float,list<list<float>>>> copert20;
 	float energy <- 0.5;
-	string vehicle_year <- "2007" ;
+	string vehicle_norm <- "2007" ;
 	list<building> alived_building;
 //************************************************************************************************************************************************************
 //************************************************************************************************************************************************************
@@ -158,6 +170,7 @@ global
 	
 	init
 	{
+		vehicle_norm <- "2007";
 		do initialize();
 		create userAgent number:1
 		{
@@ -171,6 +184,7 @@ global
 			do listen with_name:"show_pollution" store_to:"selected_pollution";
 			do listen with_name:"show_trafic" store_to:"selected_trafic";
 			do listen with_name:"reset" store_to:"reset_simulation";
+			do listen with_name:"copert" store_to:"copert_year";
 		}
 		
 	}
@@ -222,20 +236,29 @@ global
 		
 		
 	}
-	
+/*	
+	action change_copert
+	{
+		if (vehicle_year = "2007")
+		{
+			copert <- copert07; //  + ("2007"::readCopertData( '../includes/CopertData2007.csv'));
+		}
+		if (vehicle_year = "2020")
+		{
+			copert <- copert20; // + ("2020"::readCopertData( '../includes/CopertData2020.csv'));
+		}
+		
+	}
+	*/
 	action initialize
 	{
 		time <- 8#h;
 		copert <-[];
 		//Choix du parc automobile en fonction du parametres véhicle_year
-		if (vehicle_year = "2007")
-		{
-			copert <- copert + ("2007"::readCopertData( '../includes/CopertData2007.csv'));
-		}
-		if (vehicle_year = "2020")
-		{
-			copert <- copert + ("2020"::readCopertData( '../includes/CopertData2020.csv'));
-		}
+		copert <- copert + ("2007"::readCopertData( '../includes/CopertData2007.csv'));
+		copert <- copert + ("2020"::readCopertData( '../includes/CopertData2020.csv'));
+		
+	//	do change_copert;
 		
 		create crossroad from:node_shape;
 		write "Map is loading..."; 
@@ -389,15 +412,16 @@ species userAgent skills:[remoteGUI]
 	float selected_trafic <- -1;
 	float selected_pollution <- -1;
 	float reset_simulation <- 0;
+	string copert_year;
 	
 	//float polution_particule_intantanee <- 0 ;
 	reflex update_data when: (cycle mod 12) = 0
 	{ 
 		gasoline_population <- carHierarchyChange count (each.my_energy = 0);
 		diesel_population <-  carHierarchyChange count (each.my_energy = 1);
-		truck_population <- carHierarchyChange count (each.my_type_of_vehicle = 2);
-		car_population <- carHierarchyChange count (each.my_type_of_vehicle = 1);
-		motorbike_population <- carHierarchyChange count (each.my_type_of_vehicle = 0);
+		truck_population <- carHierarchyChange count (each.my_type_of_vehicle = TRUCK_ID);
+		car_population <- carHierarchyChange count (each.my_type_of_vehicle = CAR_ID);
+		motorbike_population <- carHierarchyChange count (each.my_type_of_vehicle = MOTORBYKE_ID);
 		pollution_nox_max <- max(list(pollutant_grid collect(each.pollutant[world.pollutentIndex("nox")])));
 		pollution_nox_intanstanee<- mean(list(building collect(each.pollutant[world.pollutentIndex("nox")])));
 		pollution_particule_max <- max(list(pollutant_grid collect(each.pollutant[world.pollutentIndex("pm")])));
@@ -434,6 +458,12 @@ species userAgent skills:[remoteGUI]
 				do reset;
 			}
 				
+		}
+		
+		if(copert_year != nil and copert_year != vehicle_norm)
+		{
+			vehicle_norm <- copert_year;
+			
 		}
 		
 	}
@@ -683,6 +713,9 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 					currentRoad <- location;	
 					my_energy <- is_gasoline;
 					my_type_of_vehicle <- type_of_vehicule;
+					my_ehicle_year <- vehicle_norm;
+					
+					
 								
 				}
 				create carHierarchyChange number:1
@@ -697,6 +730,8 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 					currentRoad <- location;			
 					my_energy <- is_gasoline;
 					my_type_of_vehicle <- type_of_vehicule;
+					my_ehicle_year <- vehicle_norm;
+					
 					
 				}
 		 	}//CarHierarchy
@@ -713,6 +748,7 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 						mspeed <- myself.associatedRoad.mspeed;
 						my_energy <- is_gasoline;
 						my_type_of_vehicle <- type_of_vehicule;
+						my_ehicle_year <- vehicle_norm;
 								
 					
 					}
@@ -727,6 +763,7 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 						mspeed <- myself.associatedRoad.mspeed;					
 						my_energy <- is_gasoline;
 						my_type_of_vehicle <- type_of_vehicule;
+						my_ehicle_year <- vehicle_norm;
 					}
 		 	}
 			nbCar_created <- nbCar_created + 1;
@@ -770,6 +807,7 @@ species carRandomChange parent:car
 
 species carHierarchyChange parent:car  
 {
+	
 	action changeDestination 
 	{
 		list<list<road>> selectedRoads <- self.getClassifiedNextRoadHList();	
@@ -853,7 +891,7 @@ species carHierarchyChange parent:car
 
 species car skills: [driving]
 {
-	int my_type_of_vehicle <- 1;
+	int my_type_of_vehicle <- 1; // 0 moto, 1 VL et 2 PL
 	crossroad myDestination;
 	road previousRoad;
 	road currentRoad;
@@ -866,19 +904,35 @@ species car skills: [driving]
 	action changeDestination ;
 	float endStreetArrival;
 	int my_energy <- 1;
+	string my_ehicle_year;
+	
+
 	rgb colorCar
 	{
 		return my_energy=1?#red:#green;
 	}
 	
+	float select_coeff
+	{
+		switch(my_type_of_vehicle)
+		{
+			match MOTORBYKE_ID{return MOTORBYKE_COEF; }
+			match CAR_ID {return CAR_COEF; }
+			match TRUCK_ID {return TRUCK_COEF; }
+		}
+	}
 	
 		
 	reflex cloud
 	{
 		float spp <- int(mspeed*#h / #km /10) *10;
-		list<float> mcopert <- ((world.copert at vehicle_year ) at spp)[my_energy];
+		list<float> mcopert <- ((world.copert at my_ehicle_year ) at spp)[my_energy];
 		float distance_done <- spp / step;
-		list<float> cloud <- mcopert collect(each * distance_done);
+		
+		
+		
+		
+		list<float> cloud <- mcopert collect(each * distance_done *select_coeff() );
 		ask currentRoad
 		{
 			list<float> mres <- [];
@@ -1021,7 +1075,7 @@ experiment affect type:gui
 	parameter "NbSeed: " var:randomSeed ;
 	parameter "CarBehavior (Random, Hierarchy, Speed) :" var:carBehaviorChoice; 
 	parameter "ChangeCarParc (0: Essence / 1: Diesel ): " var:energy ;
-	parameter "ChangeYearParc (2007 or 2020) :" var:vehicle_year ;
+	parameter "ChangeYearParc (2007 or 2020) :" var:vehicle_norm ;
 	
 	init
 	{
