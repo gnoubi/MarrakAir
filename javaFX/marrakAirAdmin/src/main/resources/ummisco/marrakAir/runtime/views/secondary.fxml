@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.gluonhq.charm.glisten.mvc.View?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.TextField?>
+
+
+
+
+<View fx:id="secondary" maxHeight="-Infinity" maxWidth="-Infinity"
+	minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0"
+	prefWidth="350.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="ummisco.marrakAir.runtime.views.SecondaryPresenter">
+	<center>
+		<VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
+			<padding>
+				<Insets bottom="10" left="10" right="10" top="10" />
+			</padding>
+			<children>
+				<Label text="Hôte" />
+				<TextField fx:id="hote" />
+				<Label text="Port:" />
+				<TextField fx:id="port"/>
+				<Label text="Utilisateur" />
+				<TextField fx:id="user" />
+				<Label text="Mot de passe" />
+				<TextField fx:id="password" />
+			</children>
+		</VBox>
+	</center>
+</View>
