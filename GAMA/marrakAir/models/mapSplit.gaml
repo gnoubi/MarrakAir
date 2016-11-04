@@ -20,14 +20,31 @@ global {
 			write(self.shape);
 		}
 		write length(road accumulate(each.my_geoms));
-		create cell from:road accumulate(each.my_geoms);
-		save cell type:'shp' to:"/Users/nicolas/git/agrignard/MarrakAirProject/GAMA/marrakAir/includes/SIG_demonstrateur/road_cells.shp";
+		
+		ask road
+		{
+			int id_cell<-0;
+			loop geo over:my_geoms
+			{
+				create cell number:1
+				{
+					id_cell_in_road <-id_cell;
+					id_cell <- id_cell + 1;
+					shape <- geo;
+					location <- geo.location;
+				}
+			}
+		}
+		
+	//	create cell from:road accumulate(each.my_geoms);
+		save cell type:'shp' to:"../includes/SIG_demonstrateur/traffic_show.shp" with:[id_cell_in_road::"num_cell"];
 	}
 	
 }
 
 species cell
 {
+	int id_cell_in_road <- 0;
 	
 }
 

@@ -16,18 +16,6 @@ model affectation
 
 global
 {
-	int MOTORBYKE_ID <- 0;
-	int CAR_ID <- 1;
-	int TRUCK_ID <- 2;
-		
-	int TRAFFIC_LIGHT_DENSITY <- 10;
-	
-	
-	float MOTORBYKE_COEF <- 2;
-	float CAR_COEF <- 1;
-	float TRUCK_COEF <- 1;
-	
-	
 	// Pas-de-temps à modifier en fonction de la taille du réseau
 	float stepDuration <- 5#s; //#mn ; 	
 	
@@ -55,12 +43,9 @@ global
 	
 	//string mynetwork <- "../includes/RESEAU_ROUTIER_MARRAKECH/ROUTE_MAR.shp");
 	file mynetwork <- file("../includes/SIG_demonstrateur/roads_gama.shp");
-	file trafic_show <- file("../includes/SIG_demonstrateur/traffic_show.shp");
 	file node_shape <- file("../includes/SIG_demonstrateur/nodes_gama.shp");
 	file PM <- file("../includes/SIG_demonstrateur/PM_T.shp");
 	file cell_shape <- file("../includes/SIG_demonstrateur/road_cells.shp");
-	file water <- file("../includes/SIG_demonstrateur/water.shp");
-	file airport <- file("../includes/SIG_demonstrateur/airport.shp");
 	file shape_file_buildings <- file("../includes/SIG_simu/buildings_gama.shp");
 	file shape_file_bound <- file("../includes/reperes.shp");
 	
@@ -76,10 +61,8 @@ global
 	
 	//Matrices de COPERT
 	map<string,map<float,list<list<float>>>> copert;
-	map<string,map<float,list<list<float>>>> copert07;
-	map<string,map<float,list<list<float>>>> copert20;
 	float energy <- 0.5;
-	float vehicle_2020_norm_rate <- 0.5 ;
+	string vehicle_year <- "2007" ;
 	list<building> alived_building;
 //************************************************************************************************************************************************************
 //************************************************************************************************************************************************************
@@ -95,15 +78,14 @@ global
 	int nbCycleInPeriod <- int(capturePeriod / stepDuration);
 	float maxNox <- 2500; //1.0 update: max(pollutant_grid collect(each.pollutant[world.pollutentIndex("nox")]));
 	float maxNox_buildings <- 5; //0000 ;   //1.0 update: 10000; //max(building collect(each.pollutant[world.pollutentIndex("nox")]));
-	float diffusion_rate <- 0.5;
+	float diffusion_rate <- 0.05;
 	
 	float max_speed <-  70#km/#h;
 	float percent_of_car <- 0.7; //1 equal 100% cars...
-	float percent_of_truck <- 0.3;
+	float percent_of_truck <- 0.1;
 	
 	bool show_trafic <- true;
 	bool show_pollution <- true;
-	
 	 
 	map<float,list<list<float>>> readCopertData(string fileName)
 	{
@@ -174,104 +156,20 @@ global
 	
 	init
 	{
-		do initialize();
-		create userAgent number:1
-		{
-			do connect to:"localhost";
-			do expose variables:["gasoline_population","diesel_population"] with_name:"energy";
-			do expose variables:["truck_population","car_population","motorbike_population"] with_name:"typeVehicle";
-			do expose variables:["n2007","n2020","my_date"] with_name:"normVehicle";
-			do expose variables:["my_date","pollution_nox_intanstanee",  "pollution_particule_instantanee","pollution_co2_intanstanee" ] with_name:"pollutantGraph";
-			do listen with_name:"slide_energy" store_to:"selected_energy";
-			do listen with_name:"slide_vehicule" store_to:"selected_vehicule";
-			do listen with_name:"slide_speed" store_to:"selected_speed";
-			do listen with_name:"show_pollution" store_to:"selected_pollution";
-			do listen with_name:"show_trafic" store_to:"selected_trafic";
-			do listen with_name:"reset" store_to:"reset_simulation";
-			do listen with_name:"copert" store_to:"copert_2020_rate";
-		}
-		
-	}
-	
-	
-	action reset
-	{
-		ask carHierarchyChange
-		{
-			do die;
-		}
-		ask carRandomChange
-		{
-			do die;
-		}
-		ask crossroad 
-		{
-			do die;
-		}
-		ask building
-		{
-			do die;
-		}
-		ask landscape
-		{
-			do die;
-		}
-		
-		ask carCounter
-		{
-			do die;
-		}
-		
-		ask pollutant_grid
-		{
-			do die;
-		}
-		
-		ask bound
-		{
-			do die;
-		}
-		ask road
-		{
-			do die;
-		}
-		ask traffic_light
-		{
-			do die;
-		}
-		
-		do initialize();
-		
-		
-	}
-/*	
-	action change_copert
-	{
-		if (vehicle_year = "2007")
-		{
-			copert <- copert07; //  + ("2007"::readCopertData( '../includes/CopertData2007.csv'));
-		}
-		if (vehicle_year = "2020")
-		{
-			copert <- copert20; // + ("2020"::readCopertData( '../includes/CopertData2020.csv'));
-		}
-		
-	}
-	*/
-	action initialize
-	{
 		time <- 8#h;
 		copert <-[];
 		//Choix du parc automobile en fonction du parametres véhicle_year
-		copert <- copert + ("2007"::readCopertData( '../includes/CopertData2007.csv'));
-		copert <- copert + ("2020"::readCopertData( '../includes/CopertData2020.csv'));
-		
-	//	do change_copert;
+		if (vehicle_year = "2007")
+		{
+			copert <- copert + ("2007"::readCopertData( '../includes/CopertData2007.csv'));
+		}
+		if (vehicle_year = "2020")
+		{
+			copert <- copert + ("2020"::readCopertData( '../includes/CopertData2020.csv'));
+		}
 		
 		create crossroad from:node_shape;
 		write "Map is loading..."; 
-		
-		//create traffic_light from: trafic_show with:[cell_index::int(read("num_cell"))];
 		
 		create building from: shape_file_buildings with: [type:: string(read('building'))] {
 			if type = 'small' {
@@ -283,15 +181,6 @@ global
 			if type = 'tall' {
 				height<-100 +rnd(10) ;
 			}
-		}
-		
-		create landscape from:water
-		{
-			mycolor <- #blue;
-		}
-		create landscape from: airport
-		{
-			mycolor <- #grey;
 		}
 		create pollutant_grid from:cell_shape{
 			neighboor_buildings <- building at_distance 70#m;
@@ -373,6 +262,18 @@ global
 		roadToDisplay <-(road first_with(each.mid = 305882936 ));	
 		//write copert;
 		
+		create userAgent number:1
+		{
+			do connect to:"localhost";
+			do expose variables:["gasoline_population","diesel_population"] with_name:"energy";
+			do expose variables:["truck_population","car_population","motorbike_population"] with_name:"typeVehicle";
+			do expose variables:["my_date","pollution_nox_max","pollution_nox_intanstanee", "pollution_particule_max", "pollution_particule_instantanee" ] with_name:"pollutantGraph";
+			do listen with_name:"slide_energy" store_to:"selected_energy";
+			do listen with_name:"slide_vehicule" store_to:"selected_vehicule";
+			do listen with_name:"slide_speed" store_to:"selected_speed";
+			do listen with_name:"show_pollution" store_to:"selected_pollution";
+			do listen with_name:"show_trafic" store_to:"selected_trafic";
+		}
 		 
 		
 	} //init 
@@ -389,7 +290,7 @@ global
 	} 
 } //global
 
-species bound schedules:[] {
+species bound {
 	
 	/*reflex doDie when: cycle=2{
 		do die;
@@ -398,117 +299,76 @@ species bound schedules:[] {
 		draw shape color: #black;
 	}
 }
-
-species traffic_light schedules:[]
-{
-	int cell_index;
-	aspect base
-	{
-		if((cell_index + cycle) mod TRAFFIC_LIGHT_DENSITY = 0)
-		{
-			draw circle(2#m) color:#white;	
-		}
-	}
-}
-
 species userAgent skills:[remoteGUI]
 {
 	int gasoline_population <- 0 ;
 	int diesel_population <- 0 ;
 	int truck_population <- 0 ;
 	int car_population <- 0 ;
-	int n2007 <- 0;
-	int n2020 <- 0;
 	int motorbike_population <- 0 ;
 	float pollution_nox_max <- 0 ;
 	float pollution_nox_intanstanee <- 0 ;
 	//float polution_nox_intantanee <- 0 ;
 	float pollution_particule_max <- 0 ;
 	float pollution_particule_instantanee <- 0 ;
-	float pollution_co2_intanstanee <- 0;
 	int my_date <- 0;
-	float selected_energy <- round(energy * 100);
-	float selected_energy_old <-  round(energy * 100);
+	float selected_energy <- 0;
+	float selected_energy_old <- 0;
 	 
-	float selected_vehicule <- int(percent_of_car*100);
-	float selected_vehicule_old <- int(percent_of_car*100);
+	float selected_vehicule <- 0;
+	float selected_vehicule_old <- 0;
 	
 	float selected_speed <- 0;
 	float selected_speed_old <- 0;
 	float selected_trafic <- -1;
 	float selected_pollution <- -1;
-	float reset_simulation <- 0;
-	float copert_2020_rate;
 	
 	//float polution_particule_intantanee <- 0 ;
 	reflex update_data when: (cycle mod 12) = 0
 	{ 
-		int tt <-length(carHierarchyChange); 
-		
-		gasoline_population <- round(tt=0?50:((carHierarchyChange count (each.my_energy = 0))/tt*100));
-		diesel_population <-  100 -  gasoline_population ; //count (each.my_energy = 1);
-		truck_population <- round(tt=0?20:((carHierarchyChange count (each.my_type_of_vehicle = TRUCK_ID))/tt*100));
-		car_population <-  round(tt=0?40:((carHierarchyChange count (each.my_type_of_vehicle = CAR_ID))/tt*100)); 
-		motorbike_population <- 100 - truck_population -  car_population ; //carHierarchyChange count (each.my_type_of_vehicle = MOTORBYKE_ID);
-	//	pollution_nox_max <- max(list(pollutant_grid collect(each.pollutant[world.pollutentIndex("nox")])));
-		pollution_nox_intanstanee<- mean(list(building collect(mean(each.pollutant_history[world.pollutentIndex("co")]))));
-		pollution_co2_intanstanee<- mean(list(building collect(mean(each.pollutant_history[world.pollutentIndex("co2")]))));
-//		pollution_particule_max <- max(list(pollutant_grid collect(each.pollutant[world.pollutentIndex("pm")])));
-		pollution_particule_instantanee <- mean(list(building collect(mean(each.pollutant_history[world.pollutentIndex("pm")]))));
-	/*	pollution_nox_max <- max(list(pollutant_grid collect(each.pollutant[world.pollutentIndex("nox")])));
+		gasoline_population <- carHierarchyChange count (each.my_energy = 0);
+		diesel_population <-  carHierarchyChange count (each.my_energy = 1);
+		truck_population <- carHierarchyChange count (each.my_type_of_vehicle = 2);
+		car_population <- carHierarchyChange count (each.my_type_of_vehicle = 1);
+		motorbike_population <- carHierarchyChange count (each.my_type_of_vehicle = 0);
+		pollution_nox_max <- max(list(pollutant_grid collect(each.pollutant[world.pollutentIndex("nox")])));
 		pollution_nox_intanstanee<- mean(list(building collect(each.pollutant[world.pollutentIndex("nox")])));
 		pollution_particule_max <- max(list(pollutant_grid collect(each.pollutant[world.pollutentIndex("pm")])));
 		pollution_particule_instantanee <- mean(list(pollutant_grid collect(each.pollutant[world.pollutentIndex("pm")])));
-	 */	n2007 <- round(tt=0?50:(carHierarchyChange count (each.my_vehicle_year = 2007)/tt)*100) ;
-		n2020 <- 100 - n2007 ;
-		
 		my_date <- cycle;
 		
-		
-		
-		if(selected_energy != selected_energy_old) {
+		if(selected_energy != selected_energy_old)
+		{
 			energy <- selected_energy / 100;
 			selected_energy_old <- selected_energy;
 		}
 		
-		if(selected_vehicule != selected_vehicule_old) {
+		if(selected_vehicule != selected_vehicule_old)
+		{
 			percent_of_car <- selected_vehicule/100;
 			selected_vehicule_old <- selected_vehicule;
 		}
-		
-		if(selected_speed != selected_speed_old) {
+		if(selected_speed != selected_speed_old)
+		{
 			max_speed <- selected_speed#km/#h;
 			selected_speed_old <- selected_speed;
 		}
-		
-		if(selected_trafic >=0) {
+		if(selected_trafic >=0)
+		{
 			show_trafic <- selected_trafic = 1;
 			selected_trafic <- -1.0;
 		}
 		
-		if(selected_pollution >=0) {
+		if(selected_pollution >=0)
+		{
 			show_pollution <- selected_pollution = 1;
 			selected_pollution <- -1.0;
-		}
-		
-		if(reset_simulation = 1) {
-			ask world {
-				do reset;
-			}
-				
-		}
-		//write "copert "+ (copert_2020_rate / 100) + "  "+ vehicle_2020_norm_rate;
-		
-		if(copert_2020_rate != nil and copert_2020_rate/100 != vehicle_2020_norm_rate)
-		{
-			vehicle_2020_norm_rate <- copert_2020_rate/100;
-			
 		}
 		
 	}
 }
 
-species pollutant_grid schedules:[]
+species pollutant_grid 
 	{
 		list<float> pollutant <- list_with(6,0.0);
 		list<building> neighboor_buildings;
@@ -517,15 +377,7 @@ species pollutant_grid schedules:[]
 			draw shape color:rgb(0,255-int((1-pollutant[world.pollutentIndex("nox")]/maxNox)*255),0) ;
 		}
 	}
-species landscape schedules:[]
-{
-	rgb mycolor <- #blue;
-	
-	aspect base 
-	{
-		draw shape color:mycolor;
-	}
-}
+
 species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[]
 {
 	crossroad fcrossroad;
@@ -634,26 +486,6 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 	{	
 		draw shape depth:(traffic/capacity*100) color:rgb(50+float(meanTraffic*2),255-float(meanTraffic*2),0);	
 	}
-	aspect car_lights
-	{
-		int density <- 10;
-		point new_point;
-		int segments_number <- length(shape.points)-1;
-	 	loop j from: 1 to: segments_number{
-			float x_length <- shape.points[j].x - shape.points[j-1].x;
-			float y_length <- shape.points[j].y - shape.points[j-1].y;
-			float segment_length <- sqrt(x_length^2 + y_length^2);
-		//	point shift_lane <- {y_length/segment_length*4,- x_length/segment_length*4};
-		//	point shift_lane <-  {0,0};	
-			int lights_number <- max([1,int(density * segment_length/150)]);
-		 	loop i from:1 to: lights_number{
-				new_point <- {shape.points[j-1].x + x_length * (i-1 +  mod(cycle,100)/100)/lights_number, shape.points[j-1].y + y_length * (i-1 + mod(cycle,100)/100)/lights_number};
-				draw circle(2, new_point) color: °white;
-			//	new_point <- {shift_lane.x + first(shape.points).x + x_length * (i-1 +  mod(cycle,20)/20)/lights_number, shift_lane.y + first(shape.points).y + y_length * (i-1 + mod(cycle,20)/20)/lights_number};
-			//	draw circle(2, new_point) color: °white;
-			}
-		}
-	}
 } //road
 
 species crossroad
@@ -740,7 +572,6 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 		
 		nbCar_digit_to_create <- nbCar_digit < nbCar_created + nbCar_digit_to_create ?  0 : nbCar_digit_to_create;
 		nbCar_ndigit_to_create <- nbCar_ndigit < nbCar_created + nbCar_ndigit_to_create ?  0 : nbCar_ndigit_to_create;
-
 	} // Génération des véhicules toutes les 15 minutes
 	
 	reflex createcarDigit when: nbCar_digit_to_create >= 1 // and false
@@ -758,13 +589,7 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 		loop while: nbCarToCreate >= 1
 		{
 			int is_gasoline <- flip(energy)?0:1;
-			int tmp_norm <- flip(vehicle_2020_norm_rate)?2020:2007;
-			
-//			int type_of_vehicule <- flip(percent_of_truck)?2:(flip(percent_of_car)?1:0);
-			int type_of_vehicule <- (flip(percent_of_car)?(flip(percent_of_truck)?2:1):0);
-			
-			write "type of vehi" + type_of_vehicule;
-				
+			int type_of_vehicule <- flip(percent_of_truck)?2:(flip(percent_of_car)?1:0);
 		 	if(carBehaviorChoice = "hierarchy")
 		 	{
 		 		create carHierarchyChange number:1
@@ -779,7 +604,7 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 					currentRoad <- location;	
 					my_energy <- is_gasoline;
 					my_type_of_vehicle <- type_of_vehicule;
-					my_vehicle_year <- tmp_norm;
+								
 				}
 				create carHierarchyChange number:1
 				{
@@ -793,7 +618,7 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 					currentRoad <- location;			
 					my_energy <- is_gasoline;
 					my_type_of_vehicle <- type_of_vehicule;
-					my_vehicle_year <- tmp_norm;
+					
 				}
 		 	}//CarHierarchy
 		 	else 
@@ -809,7 +634,8 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 						mspeed <- myself.associatedRoad.mspeed;
 						my_energy <- is_gasoline;
 						my_type_of_vehicle <- type_of_vehicule;
-						my_vehicle_year <- tmp_norm;
+								
+					
 					}
 					create carRandomChange number:1
 					{
@@ -822,7 +648,6 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 						mspeed <- myself.associatedRoad.mspeed;					
 						my_energy <- is_gasoline;
 						my_type_of_vehicle <- type_of_vehicule;
-						my_vehicle_year <- tmp_norm;
 					}
 		 	}
 			nbCar_created <- nbCar_created + 1;
@@ -866,7 +691,6 @@ species carRandomChange parent:car
 
 species carHierarchyChange parent:car  
 {
-	
 	action changeDestination 
 	{
 		list<list<road>> selectedRoads <- self.getClassifiedNextRoadHList();	
@@ -950,7 +774,7 @@ species carHierarchyChange parent:car
 
 species car skills: [driving]
 {
-	int my_type_of_vehicle <- 1; // 0 moto, 1 VL et 2 PL
+	int my_type_of_vehicle <- 1;
 	crossroad myDestination;
 	road previousRoad;
 	road currentRoad;
@@ -963,36 +787,19 @@ species car skills: [driving]
 	action changeDestination ;
 	float endStreetArrival;
 	int my_energy <- 1;
-	float my_vehicle_year;
-	
-
 	rgb colorCar
 	{
 		return my_energy=1?#red:#green;
 	}
 	
-	float select_coeff
-	{
-		switch(my_type_of_vehicle)
-		{
-			match MOTORBYKE_ID{return MOTORBYKE_COEF; }
-			match CAR_ID {return CAR_COEF; }
-			match TRUCK_ID {return TRUCK_COEF; }
-		}
-	}
 	
 		
 	reflex cloud
 	{
 		float spp <- int(mspeed*#h / #km /10) *10;
-		
-		list<float> mcopert <- ((world.copert at (""+int(my_vehicle_year)) ) at spp)[my_energy];
+		list<float> mcopert <- ((world.copert at vehicle_year ) at spp)[my_energy];
 		float distance_done <- spp / step;
-		
-		
-		
-		
-		list<float> cloud <- mcopert collect(each * distance_done *select_coeff() );
+		list<float> cloud <- mcopert collect(each * distance_done);
 		ask currentRoad
 		{
 			list<float> mres <- [];
@@ -1092,8 +899,6 @@ species car skills: [driving]
 
 species building schedules: alived_building {
 	list<float> pollutant <- list_with(6,0.0);
-	list<list<float>> pollutant_history <-list_with(6,[]);
-	
 	string type;
 	rgb color <- rgb(220,220,220);
 	int height;
@@ -1102,15 +907,7 @@ species building schedules: alived_building {
 	{
 		loop i from:0 to:length(cloud) - 1
 		{
-			pollutant[i] <- pollutant[i] + cloud[i];			
-			list<float> cList <- pollutant_history[i];
-			if(length(cList)>=10)
-			{
-				remove index:0 from:	cList;
-								
-			}
-			pollutant_history[i] <- cList + cloud[i];
-			
+			pollutant[i] <- pollutant[i] + cloud[i];				
 		}
 	}	
 	
@@ -1145,7 +942,7 @@ experiment affect type:gui
 	parameter "NbSeed: " var:randomSeed ;
 	parameter "CarBehavior (Random, Hierarchy, Speed) :" var:carBehaviorChoice; 
 	parameter "ChangeCarParc (0: Essence / 1: Diesel ): " var:energy ;
-	parameter "ChangeYearParc (2007 or 2020) :" var:vehicle_2020_norm_rate ;
+	parameter "ChangeYearParc (2007 or 2020) :" var:vehicle_year ;
 	
 	init
 	{
@@ -1154,14 +951,13 @@ experiment affect type:gui
 	
 	output {
 
-		display Suivi_Vehicules_3D  type:opengl background:#black refresh_every:15 //use_shader: true keystone: true //refresh_every:15 
+		display Suivi_Vehicules_3D  type:opengl background:#white use_shader: true keystone: true //refresh_every:15 
 		{
 			//grid parcArea;
 			species bound aspect: base;
-		//	species pollutant_grid aspect:nox_aspect ;
-			species road aspect:car_lights;
 			species building aspect:base; // transparency:0.5;
-			species landscape aspect:base;
+		//	species pollutant_grid aspect:nox_aspect ;
+			species road aspect:base;
 			species carCounter aspect:base;
 			//species crossroad aspect:base;
 			species car  aspect:ghost;
