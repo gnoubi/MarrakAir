@@ -20,6 +20,8 @@ global
 	int CAR_ID <- 1;
 	int TRUCK_ID <- 2;
 	
+	int TRAFFIC_LIGHT_DENSITY <- 10;
+	
 	
 	float MOTORBYKE_COEF <- 2;
 	float CAR_COEF <- 1;
@@ -53,6 +55,7 @@ global
 	
 	//string mynetwork <- "../includes/RESEAU_ROUTIER_MARRAKECH/ROUTE_MAR.shp");
 	file mynetwork <- file("../includes/SIG_demonstrateur/roads_gama.shp");
+	file trafic_show <- file("../includes/SIG_demonstrateur/traffic_show.shp");
 	file node_shape <- file("../includes/SIG_demonstrateur/nodes_gama.shp");
 	file PM <- file("../includes/SIG_demonstrateur/PM_T.shp");
 	file cell_shape <- file("../includes/SIG_demonstrateur/road_cells.shp");
@@ -92,7 +95,7 @@ global
 	int nbCycleInPeriod <- int(capturePeriod / stepDuration);
 	float maxNox <- 2500; //1.0 update: max(pollutant_grid collect(each.pollutant[world.pollutentIndex("nox")]));
 	float maxNox_buildings <- 5; //0000 ;   //1.0 update: 10000; //max(building collect(each.pollutant[world.pollutentIndex("nox")]));
-	float diffusion_rate <- 0.05;
+	float diffusion_rate <- 0.1;
 	
 	float max_speed <-  70#km/#h;
 	float percent_of_car <- 0.7; //1 equal 100% cars...
@@ -100,6 +103,7 @@ global
 	
 	bool show_trafic <- true;
 	bool show_pollution <- true;
+	
 	 
 	map<float,list<list<float>>> readCopertData(string fileName)
 	{
@@ -231,6 +235,10 @@ global
 		{
 			do die;
 		}
+		ask traffic_light
+		{
+			do die;
+		}
 		
 		do initialize();
 		
@@ -263,6 +271,8 @@ global
 		create crossroad from:node_shape;
 		write "Map is loading..."; 
 		
+		//create traffic_light from: trafic_show with:[cell_index::int(read("num_cell"))];
+		
 		create building from: shape_file_buildings with: [type:: string(read('building'))] {
 			if type = 'small' {
 				height<-10 + rnd(5);
@@ -281,7 +291,7 @@ global
 		}
 		create landscape from: airport
 		{
-			mycolor <- #white;
+			mycolor <- #grey;
 		}
 		create pollutant_grid from:cell_shape{
 			neighboor_buildings <- building at_distance 70#m;
@@ -388,6 +398,19 @@ species bound schedules:[] {
 		draw shape color: #black;
 	}
 }
+
+species traffic_light schedules:[]
+{
+	int cell_index;
+	aspect base
+	{
+		if((cell_index + cycle) mod TRAFFIC_LIGHT_DENSITY = 0)
+		{
+			draw circle(2#m) color:#white;	
+		}
+	}
+}
+
 species userAgent skills:[remoteGUI]
 {
 	int gasoline_population <- 0 ;
@@ -594,6 +617,26 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 	aspect base3D_capacity
 	{	
 		draw shape depth:(traffic/capacity*100) color:rgb(50+float(meanTraffic*2),255-float(meanTraffic*2),0);	
+	}
+	aspect car_lights
+	{
+		int density <- 10;
+		point new_point;
+		int segments_number <- length(shape.points)-1;
+	 	loop j from: 1 to: segments_number{
+			float x_length <- shape.points[j].x - shape.points[j-1].x;
+			float y_length <- shape.points[j].y - shape.points[j-1].y;
+			float segment_length <- sqrt(x_length^2 + y_length^2);
+		//	point shift_lane <- {y_length/segment_length*4,- x_length/segment_length*4};
+		//	point shift_lane <-  {0,0};	
+			int lights_number <- max([1,int(density * segment_length/150)]);
+		 	loop i from:1 to: lights_number{
+				new_point <- {shape.points[j-1].x + x_length * (i-1 +  mod(cycle,100)/100)/lights_number, shape.points[j-1].y + y_length * (i-1 + mod(cycle,100)/100)/lights_number};
+				draw circle(2, new_point) color: °white;
+			//	new_point <- {shift_lane.x + first(shape.points).x + x_length * (i-1 +  mod(cycle,20)/20)/lights_number, shift_lane.y + first(shape.points).y + y_length * (i-1 + mod(cycle,20)/20)/lights_number};
+			//	draw circle(2, new_point) color: °white;
+			}
+		}
 	}
 } //road
 
@@ -1084,12 +1127,12 @@ experiment affect type:gui
 	
 	output {
 
-		display Suivi_Vehicules_3D  type:opengl background:#black //use_shader: true keystone: true //refresh_every:15 
+		display Suivi_Vehicules_3D  type:opengl background:#black refresh_every:15 //use_shader: true keystone: true //refresh_every:15 
 		{
 			//grid parcArea;
 			species bound aspect: base;
 		//	species pollutant_grid aspect:nox_aspect ;
-			species road aspect:base;
+			species road aspect:car_lights;
 			species building aspect:base; // transparency:0.5;
 			species landscape aspect:base;
 			species carCounter aspect:base;
