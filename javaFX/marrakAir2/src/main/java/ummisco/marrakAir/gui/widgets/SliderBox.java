@@ -49,7 +49,10 @@ public class SliderBox extends VBox {
 	//	this.setPadding(new Insets(30));
 		this.slider=new Slider(min,max,(max-min)/2);
 		this.slider.setOrientation(Orientation.VERTICAL);
+		this.slider.setBlockIncrement(1.0);
 		slider.setShowTickLabels(true);
+		slider.setSnapToTicks(true);
+		slider.setBlockIncrement(1);
 		slider.setShowTickMarks(true);
 		slider.setMajorTickUnit(50);
 		slider.setMinorTickCount(5);
@@ -76,7 +79,7 @@ public class SliderBox extends VBox {
 			@Override
 			public void handle(Event event) {
 				if(value != slider.getValue()) {
-					value = slider.getValue();
+					value = Math.round(slider.getValue());
 					valueLabel.setText(""+value);
 					fireEvent(new ValueChangedEvent(agentName,agentAttribute,value));
 				}

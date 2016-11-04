@@ -25,6 +25,9 @@ import javafx.scene.paint.Color;
 
 public class GamePresenter {
 
+	
+	private static GamePresenter scope;
+	
 	private static MQTTConnector connection = null;
 	
     @FXML
@@ -33,10 +36,17 @@ public class GamePresenter {
     PieChartBox vehicleEnergy;
     @FXML 
     PieChartBox vehicleType;
+    
+    @FXML 
+    PieChartBox vehicleAge;
+    
     @FXML
     LineChartBox<Double, Double> pollutantGraph;
     @FXML
     LineChartBox<Double, Double> particulExposition;
+    @FXML
+    LineChartBox<Double, Double> CO2Production;
+    
     @FXML
     Button showTrafficB;
     boolean traficShow =true;
@@ -149,17 +159,29 @@ public class GamePresenter {
 		 
 	}
 
-	@FXML
-	public void initialize() {
-    	
-    	if(connection!=null&&connection.isConnected()){
+	public static void initConnection()
+	{
+		scope.initializeConnection();
+	}
+	
+	public void initializeConnection()
+	{
+		if(connection!=null&&!connection.isConnected()){
     		System.out.println("doing something");
     		this.vehicleEnergy.registerConnection(connection);
             this.vehicleType.registerConnection(connection);
             this.pollutantGraph.registerConnection(connection);
             this.particulExposition.registerConnection(connection);
+            this.vehicleAge.registerConnection(connection);
+            this.CO2Production.registerConnection(connection);
     	}
-		
+	}
+	
+	@FXML
+	public void initialize() {
+    	
+    	
+		initializeConnection();
 
     	ChangeListener<? super Boolean> et = new ChangeListener() {
 

@@ -21,17 +21,22 @@
          <children>
          	<HBox prefHeight="200.0">
          		<PieChartBox fx:id="vehicleEnergy" title="Energie" follow="energy" specifyDraw="gasoline_population::Essence::20,diesel_population::Diesel::80"/>
-         		<PieChartBox fx:id="vehicleType" title="Type de véhicule" follow="typeVehicle" specifyDraw="car_population::Voiture::40,truck_population::Camion::30,motorbike_population::motocyclette::30"/>
+         		<PieChartBox fx:id="vehicleAge" title="Age of vehicles" follow="normVehicle" specifyDraw="n2007::standard::70,n2020::innovative::30"/>
+         		<PieChartBox fx:id="vehicleType" title="Type des véhicules" follow="typeVehicle" specifyDraw="car_population::Car::40,truck_population::Truck::30,motorbike_population::Motorbike::30"/>
          	</HBox>
          	<HBox>
-				<LineChartBox  fx:id="pollutantGraph" follow="pollutantGraph" plots="my_date::pollution_nox_intanstanee::production de nox">
+				<LineChartBox  fx:id="pollutantGraph" follow="pollutantGraph" plots="my_date::pollution_nox_intanstanee::production de nox"  >
                             <xAxis><NumberAxis label="Time" lowerBound="0" upperBound="3" tickUnit="1"/></xAxis>
         					<yAxis><NumberAxis label="Emissions de NOx (g)" lowerBound="0" upperBound="3" tickUnit="1"/></yAxis>
     					</LineChartBox>         
  				<LineChartBox  fx:id="particulExposition" follow="pollutantGraph" plots="my_date::pollution_particule_instantanee::production instantanée de particules fine">
                             <xAxis><NumberAxis label="Time" lowerBound="0" upperBound="3" tickUnit="1"/></xAxis>
         					<yAxis><NumberAxis label="Emissions de particules fines (g)" lowerBound="0" upperBound="3" tickUnit="1"/></yAxis>
-    			</LineChartBox>         
+    			</LineChartBox>
+    			<LineChartBox  fx:id="CO2Production" follow="pollutantGraph" plots="my_date::pollution_co2_intanstanee::production instantanée de CO2">
+                            <xAxis><NumberAxis label="Time" lowerBound="0" upperBound="3" tickUnit="1"/></xAxis>
+        					<yAxis><NumberAxis label="Emissions de CO2 (g)" lowerBound="0" upperBound="3" tickUnit="1"/></yAxis>
+    			</LineChartBox>
          	</HBox>
 			<Separator  />
 			<HBox alignment="CENTER" prefHeight="200.0" spacing="15.0" >
@@ -51,9 +56,9 @@
          			</children>
          		</VBox>
 			
-				<SliderBox label="Véhicules essences (%)" agentName="User" agentAttribute="slide_energy" vertical="true"  minWidth="100" prefWidth="150.0" onValueChanged="#valueChanged" />
-         		<SliderBox label="Vitesse maximale (km/h)" agentName="User" agentAttribute="slide_speed" vertical="true"  prefWidth="150.0" onValueChanged="#valueChanged"/>
-         		<SliderBox label="Véhicules à 4 roues (%)" agentName="User" agentAttribute="slide_vehicule" vertical="true"  prefWidth="150.0" onValueChanged="#valueChanged"/>
+				<SliderBox label="Véhicules essences (%)" agentName="User" agentAttribute="slide_energy" vertical="true"  minWidth="100" prefWidth="150.0" onValueChanged="#valueChanged"  />
+         		<SliderBox label="Véhicules N°2020 (%)" agentName="User" agentAttribute="copert" vertical="true"  minWidth="100" prefWidth="150.0" onValueChanged="#valueChanged"  />
+				<SliderBox label="Véhicules à 4 roues (%)" agentName="User" agentAttribute="slide_vehicule" vertical="true"  prefWidth="150.0" onValueChanged="#valueChanged"  />
          	</HBox>	         
          
          </children>

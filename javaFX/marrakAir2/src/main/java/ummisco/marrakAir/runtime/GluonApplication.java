@@ -40,6 +40,8 @@ public class GluonApplication extends MobileApplication {
 		try {
 			MQTTConnector connection = new MQTTConnector("localhost", null, null, null);
 			GamePresenter.setConnection(connection);
+			System.out.println("connected !");
+			
 		} catch (MqttException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -66,24 +68,16 @@ public class GluonApplication extends MobileApplication {
 			}
 		};
 		addViewFactory(PRIMARY_VIEW, v1);
-		System.out.println("pb de connexion 1");
-		
 		addViewFactory(SECONDARY_VIEW, v2);
-		System.out.println("pb de connexion 2");
-		
 		final NavigationDrawer drawer = new NavigationDrawer();
 
 		NavigationDrawer.Header header = new NavigationDrawer.Header("MarrakAir",
 				"Smart city Participative project",
 				new Avatar(21, new Image(GluonApplication.class.getResourceAsStream("/icon.png"))));
 		drawer.setHeader(header);
-		System.out.println("pb de connexion 3");
-		
-
-		final Item primaryItem = new Item("Game", MaterialDesignIcon.HOME.graphic());
+				final Item primaryItem = new Item("Game", MaterialDesignIcon.HOME.graphic());
 		final Item secondaryItem = new Item("Configuration", MaterialDesignIcon.DASHBOARD.graphic());
 		drawer.getItems().addAll(primaryItem, secondaryItem);
-		System.out.println("pb de connexion 4");
 		
 		ChangeListener<? super Node> nd1 = new ChangeListener<Node>() {
 

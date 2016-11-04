@@ -68,6 +68,7 @@ public class LineChartBox<X,Y> extends LineChart<X,Y> implements Observer {
 		super(xAxis, yAxis);
 		myPlots = new ArrayList<InternalPlot<X, Y>>();
 		this.setAnimated(true);
+		this.setCreateSymbols(false);
 		myData = FXCollections.observableArrayList();
 		this.setData(myData);
 	}

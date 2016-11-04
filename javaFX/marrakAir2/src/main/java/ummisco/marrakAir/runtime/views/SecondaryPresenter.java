@@ -76,7 +76,8 @@ public class SecondaryPresenter {
 					{
 						try {
 							GamePresenter.setConnection(new MQTTConnector(hote.getText(), port.getText(), user.getText(), password.getText()));
-								Alert alert = new Alert(AlertType.INFORMATION, "Connection is working");
+							GamePresenter.initConnection();
+							Alert alert = new Alert(AlertType.INFORMATION, "Connection is working");
 						        alert.showAndWait();
 						} catch (MqttException e1) {
 							// TODO Auto-generated catch block
