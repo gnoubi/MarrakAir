@@ -38,7 +38,7 @@ public class GluonApplication extends MobileApplication {
 	@Override
 	public void init() {
 		try {
-			MQTTConnector connection = new MQTTConnector("192.168.2.1", null, null, null);
+			MQTTConnector connection = new MQTTConnector("loc", null, null, null);
 			GamePresenter.setConnection(connection);
 			System.out.println("connected !");
 			

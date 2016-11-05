@@ -180,7 +180,7 @@ public class GamePresenter {
 	@FXML
 	public void initialize() {
     	
-    	
+    	GamePresenter.scope = this;
 		initializeConnection();
 
     	ChangeListener<? super Boolean> et = new ChangeListener() {
