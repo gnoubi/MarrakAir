@@ -187,7 +187,7 @@ public class PieChartBox extends PieChart implements Observer {
 	@Override
 	protected void layoutChartChildren(double top, double left, double contentWidth, double contentHeight) {
 		// TODO Auto-generated method stub
-		if (getLabelsVisible()) {
+		if (false &&getLabelsVisible()) {
 		      getData().forEach(d -> {
 		        Optional<Node> opTextNode = this.lookupAll(".chart-pie-label").stream().filter(n -> n instanceof Text && ((Text) n).getText().contains(d.getName())).findAny();
 		        if (opTextNode.isPresent()) {

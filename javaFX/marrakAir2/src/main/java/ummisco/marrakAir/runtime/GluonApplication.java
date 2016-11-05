@@ -38,7 +38,7 @@ public class GluonApplication extends MobileApplication {
 	@Override
 	public void init() {
 		try {
-			MQTTConnector connection = new MQTTConnector("localhost", null, null, null);
+			MQTTConnector connection = new MQTTConnector("192.168.2.1", null, null, null);
 			GamePresenter.setConnection(connection);
 			System.out.println("connected !");
 			
@@ -49,8 +49,6 @@ public class GluonApplication extends MobileApplication {
 			
 		}
 		
-		//addViewFactory(PRIMARY_VIEW, () -> (View) new PrimaryView().getView());
-		//this.addLayerFactory(PRIMARY_VIEW, (VBox) new GameView().); 
 		Supplier<View> v1 = new Supplier<View>() {
 
 			@Override
@@ -129,7 +127,7 @@ public class GluonApplication extends MobileApplication {
 	        controller.startHousekeeping(); 
 	    }*/
 		
-		Platform.exit();
-		System.exit(0);
+	//	Platform.exit();
+	//	System.exit(0);
 	}
 }
