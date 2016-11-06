@@ -157,7 +157,7 @@ public class LineChartBox<X,Y> extends LineChart<X,Y> implements Observer {
 			List<Map<String,Object>> datas = f.popLastData();
 			for(Map<String,Object> dts:datas)
 			{
-				System.out.println("how"+dts);
+				
 				updateData(dts);
 				
 			}

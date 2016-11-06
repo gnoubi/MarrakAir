@@ -9,7 +9,9 @@
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.control.Button?>
 <?import com.gluonhq.charm.glisten.control.Icon?>
 
@@ -27,16 +29,18 @@
 				<Button fx:id="showPollutantB" mnemonicParsing="false"
 					text="Masquer la pollution" onAction="#buttonPollutionPressed">
 					<graphic>
-						<Icon content="LANGUAGE" />
 					</graphic>
 				</Button>
 				<Button fx:id="showTrafficB" mnemonicParsing="false"
 					text="Masquer le trafic" onAction="#buttonTrafficPressed">
 					<graphic>
-						<Icon content="LANGUAGE" />
 					</graphic>
 				</Button>
-
+				<Button fx:id="resetSim" mnemonicParsing="false"
+					text="Reinitialiser la simulation" onAction="#buttonResetPressed">
+					<graphic>
+					</graphic>
+				</Button>
 			</children>
 
 		</VBox>

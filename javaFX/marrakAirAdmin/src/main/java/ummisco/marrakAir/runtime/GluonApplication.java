@@ -116,7 +116,7 @@ public class GluonApplication extends MobileApplication {
 	public void postInit(Scene scene) {
 		System.out.println("pb de connexion 7b");
 		
-		Swatch.GREEN.assignTo(scene);
+		Swatch.RED.assignTo(scene);
 		System.out.println("pb de connexion 7");
 		
 		((Stage) scene.getWindow()).setHeight(1024);
@@ -135,7 +135,7 @@ public class GluonApplication extends MobileApplication {
 	        controller.startHousekeeping(); 
 	    }*/
 		
-		Platform.exit();
-		System.exit(0);
+		/*Platform.exit();
+		System.exit(0);*/
 	}
 }

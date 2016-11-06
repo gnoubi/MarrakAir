@@ -461,7 +461,6 @@ species userAgent skills:[remoteGUI]
 		pollution_particule_instantanee <- mean(list(pollutant_grid collect(each.pollutant[world.pollutentIndex("pm")])));
 	 */	n2007 <- round(tt=0?50:(carHierarchyChange count (each.my_vehicle_year = 2007)/tt)*100) ;
 		n2020 <- 100 - n2007 ;
-		
 		my_date <- cycle;
 		write "my_date";
 		
@@ -492,9 +491,12 @@ species userAgent skills:[remoteGUI]
 		}
 		
 		if(reset_simulation = 1) {
+			write "gonna reset";
 			ask world {
 				do reset;
 			}
+			
+			reset_simulation <- 0;
 				
 		}
 		//write "copert "+ (copert_2020_rate / 100) + "  "+ vehicle_2020_norm_rate;
