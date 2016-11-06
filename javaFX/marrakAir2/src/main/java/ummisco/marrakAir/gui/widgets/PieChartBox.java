@@ -10,6 +10,7 @@ import java.util.Optional;
 
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -60,7 +61,7 @@ public class PieChartBox extends PieChart implements Observer {
 
 	private FollowedVariable  flVariable ;
 	private ArrayList<InternalPlot>  drawedData ;
-	
+
 	Tooltip tooltip;
 	public PieChartBox()
 	{
@@ -68,11 +69,7 @@ public class PieChartBox extends PieChart implements Observer {
 		this.drawedData  =  new ArrayList<InternalPlot>();
 		ObservableList<PieChart.Data> pieChartData =FXCollections.observableArrayList();
 		this.setData(pieChartData);
-
-
 		
-
-
 	}
 
 	public void setFollow(String lbl)
@@ -100,10 +97,21 @@ public class PieChartBox extends PieChart implements Observer {
 		for(String tmp : variables)
 		{
 			String[] dt = tmp.split("::");
-			InternalPlot plt = new InternalPlot(dt[0],dt[1], Float.valueOf(dt[2]).floatValue());
+			String label = "";
+			if(dt[1].equals("Motorbike")){
+				label = "Moto";
+			}
+			if(dt[1].equals("Truck")){
+				label = "Camion";
+			}
+			
+			if(dt[1].equals("Car")){
+				label = "Voiture";
+			}
+			InternalPlot plt = new InternalPlot(dt[0], label, Float.valueOf(dt[2]).floatValue());
 
 			this.drawedData.add(plt);
-
+			
 			//this.createSymbolsProperty();
 
 		}
@@ -115,11 +123,12 @@ public class PieChartBox extends PieChart implements Observer {
 		for(InternalPlot plt:this.drawedData)
 		{
 
-			
+
 			this.getData().add(plt.data);
 
 
 		}
+		updateTooltip();
 
 
 		//this.createSymbolsProperty();
@@ -181,21 +190,32 @@ public class PieChartBox extends PieChart implements Observer {
 				tooltip.setText(String.valueOf(data.getName() + "\n" + (int)data.getPieValue()) ); 
 			}
 		});
-		
+
 	}
-	
-	@Override
-	protected void layoutChartChildren(double top, double left, double contentWidth, double contentHeight) {
+
+
+	/*protected void layoutChartChildren(double top, double left, double contentWidth, double contentHeight) {
 		// TODO Auto-generated method stub
-		if (false &&getLabelsVisible()) {
-		      getData().forEach(d -> {
-		        Optional<Node> opTextNode = this.lookupAll(".chart-pie-label").stream().filter(n -> n instanceof Text && ((Text) n).getText().contains(d.getName())).findAny();
-		        if (opTextNode.isPresent()) {
-		          ((Text) opTextNode.get()).setText(d.getName() + " " + d.getPieValue() + " %");
-		        }
-		      });
-		    }
+		
+			getData().forEach(data ->
+			data.nameProperty().bind(
+					Bindings.concat(
+							data.getName(), " ", data.pieValueProperty(), " %"
+							)
+					)
+					);
 		super.layoutChartChildren(top, left, contentWidth, contentHeight);
+	}*/
+	
+	
+	void updateTooltip(){
+		/*getData().forEach(data ->
+		data.nameProperty().bind(
+				Bindings.concat(
+						data.getName(), " ", data.pieValueProperty(), " %"
+						)
+				)
+				);*/
 	}
 
 }

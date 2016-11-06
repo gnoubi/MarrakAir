@@ -1,6 +1,6 @@
 package ummisco.marrakAir.gui.widgets;
 
-import com.gluonhq.charm.glisten.layout.layer.FloatingActionButton;
+
 import com.gluonhq.charm.glisten.visual.MaterialDesignIcon;
 
 import javafx.beans.value.ChangeListener;
@@ -8,7 +8,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
+
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -17,8 +17,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
+
 import javafx.scene.layout.VBox;
 
 public class SliderBox extends VBox {
@@ -47,16 +46,15 @@ public class SliderBox extends VBox {
 	{
 		super();
 	//	this.setPadding(new Insets(30));
-		this.slider=new Slider(min,max,(max-min)/2);
+		this.slider=new Slider(min, max, (min-max)/2);
 		this.slider.setOrientation(Orientation.VERTICAL);
-		this.slider.setBlockIncrement(1.0);
+		
 		slider.setShowTickLabels(true);
 		slider.setSnapToTicks(true);
-		slider.setBlockIncrement(1);
 		slider.setShowTickMarks(true);
-		slider.setMajorTickUnit(50);
-		slider.setMinorTickCount(5);
-		slider.setBlockIncrement(10);
+		slider.setMajorTickUnit(25);
+		//slider.setMinorTickCount(5);
+		slider.setBlockIncrement(5);
 		ChangeListener<Number> etmp = new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
@@ -80,7 +78,7 @@ public class SliderBox extends VBox {
 			public void handle(Event event) {
 				if(value != slider.getValue()) {
 					value = Math.round(slider.getValue());
-					valueLabel.setText(""+value);
+					valueLabel.setText(""+String.valueOf((int) value) );
 					fireEvent(new ValueChangedEvent(agentName,agentAttribute,value));
 				}
 				
@@ -146,9 +144,9 @@ public class SliderBox extends VBox {
 
 			@Override
 			public void handle(ActionEvent event) {
-				slider.increment();
+				slider.setValue(slider.getValue()+5);
 				value = slider.getValue();
-				valueLabel.setText(""+value);
+				valueLabel.setText(""+String.valueOf((int) value) );
 				fireEvent(new ValueChangedEvent(agentName,agentAttribute,value));
 
 				//fireEvent(new ValueChangedEvent(agentName,agentAttribute,value));
@@ -162,9 +160,9 @@ public class SliderBox extends VBox {
 
 			@Override
 			public void handle(ActionEvent event) {
-				slider.decrement();
+				slider.setValue(slider.getValue()-5);
 				value = slider.getValue();
-				valueLabel.setText(""+value);
+				valueLabel.setText(""+String.valueOf((int) value) );
 				fireEvent(new ValueChangedEvent(agentName,agentAttribute,value));
 
 				//fireEvent(new ValueChangedEvent(agentName,agentAttribute,value));
@@ -261,6 +259,16 @@ public class SliderBox extends VBox {
 	{
 		return this.agentAttribute;
 	}
+	
+	public void setInitValue(String value) {
+		this.value = Double.valueOf(value);
+		valueLabel.setText(value);
+		slider.setValue(Double.valueOf(value));
+		
+	}
 
+	public Slider getSlider() {
+		return slider;
+	}
 	
 }

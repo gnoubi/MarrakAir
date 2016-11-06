@@ -9,6 +9,7 @@ import com.gluonhq.charm.glisten.visual.MaterialDesignIcon;
 
 import ummisco.marrakAir.gui.widgets.LineChartBox;
 import ummisco.marrakAir.gui.widgets.PieChartBox;
+import ummisco.marrakAir.gui.widgets.SliderBox;
 import ummisco.marrakAir.gui.widgets.ValueChangedEvent;
 import ummisco.marrakAir.network.MQTTConnector;
 import ummisco.marrakAir.runtime.GluonApplication;
@@ -20,6 +21,7 @@ import javafx.fxml.FXML;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
@@ -55,6 +57,14 @@ public class GamePresenter {
     Button showPollutantB;
     boolean pollutantShow =true;
 
+    @FXML
+    SliderBox vehicleEnergySlider;
+    
+    @FXML
+    SliderBox vehicleTypeSlider;
+    
+    @FXML
+    SliderBox vehicleInnovativeSlider;
     
     
     private void change(ObservableValue obs, Object oldValue, Object newValue)
@@ -183,6 +193,7 @@ public class GamePresenter {
     	GamePresenter.scope = this;
 		initializeConnection();
 
+		
     	ChangeListener<? super Boolean> et = new ChangeListener() {
 
 			@Override

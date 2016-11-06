@@ -25,22 +25,22 @@
          		<PieChartBox fx:id="vehicleType" title="Type des véhicules" follow="typeVehicle" specifyDraw="car_population::Car::40,truck_population::Truck::30,motorbike_population::Motorbike::30"/>
          	</HBox>
          	<HBox>
-				<LineChartBox  fx:id="pollutantGraph" follow="pollutantGraph" plots="my_date::pollution_nox_intanstanee::production de nox"  >
-                            <xAxis><NumberAxis label="Time" lowerBound="0" upperBound="3" tickUnit="1"/></xAxis>
-        					<yAxis><NumberAxis label="Emissions de NOx (g)" lowerBound="0" upperBound="3" tickUnit="1"/></yAxis>
+				<LineChartBox  fx:id="pollutantGraph" follow="pollutantGraph" plots="my_date::pollution_nox_intanstanee::production instantanée d'Oxyde d'azote"  >
+                            <xAxis><NumberAxis label="Temps(h)" lowerBound="0" upperBound="3" tickUnit="1"/></xAxis>
+        					<yAxis><NumberAxis label="Emissions d'Oxyde d'azote (g)" lowerBound="0" upperBound="3" tickUnit="1"/></yAxis>
     					</LineChartBox>         
  				<LineChartBox  fx:id="particulExposition" follow="pollutantGraph" plots="my_date::pollution_particule_instantanee::production instantanée de particules fine">
-                            <xAxis><NumberAxis label="Time" lowerBound="0" upperBound="3" tickUnit="1"/></xAxis>
+                            <xAxis><NumberAxis label="Temps(h)" lowerBound="0" upperBound="3" tickUnit="1"/></xAxis>
         					<yAxis><NumberAxis label="Emissions de particules fines (g)" lowerBound="0" upperBound="3" tickUnit="1"/></yAxis>
     			</LineChartBox>
     			<LineChartBox  fx:id="CO2Production" follow="pollutantGraph" plots="my_date::pollution_co2_intanstanee::production instantanée de CO2">
-                            <xAxis><NumberAxis label="Time" lowerBound="0" upperBound="3" tickUnit="1"/></xAxis>
+                            <xAxis><NumberAxis label="Temps(h)" lowerBound="0" upperBound="3" tickUnit="1"/></xAxis>
         					<yAxis><NumberAxis label="Emissions de CO2 (g)" lowerBound="0" upperBound="3" tickUnit="1"/></yAxis>
     			</LineChartBox>
          	</HBox>
 			<Separator  />
 			<HBox alignment="CENTER" prefHeight="200.0" spacing="15.0" >
-				<VBox alignment="CENTER_RIGHT"  spacing="20.0">
+				<!-- <VBox alignment="CENTER_RIGHT"  spacing="20.0">
          			<children>
          				<Button  fx:id="showPollutantB" mnemonicParsing="false"  text="Masquer la pollution" onAction="#buttonPollutionPressed">
 			               <graphic>
@@ -54,11 +54,11 @@
 			            </Button>
          				
          			</children>
-         		</VBox>
+         		</VBox> -->
 			
 				<SliderBox label="Véhicules essences (%)" agentName="User" agentAttribute="slide_energy" vertical="true"  minWidth="100" prefWidth="150.0" onValueChanged="#valueChanged"  />
-         		<SliderBox label="Véhicules N°2020 (%)" agentName="User" agentAttribute="copert" vertical="true"  minWidth="100" prefWidth="150.0" onValueChanged="#valueChanged"  />
-				<SliderBox label="Véhicules à 4 roues (%)" agentName="User" agentAttribute="slide_vehicule" vertical="true"  prefWidth="150.0" onValueChanged="#valueChanged"  />
+         		<SliderBox label="Véhicules innovatives (2020) (%)" agentName="User" agentAttribute="copert" vertical="true"  minWidth="100" prefWidth="150.0" onValueChanged="#valueChanged" />
+				<SliderBox label="Véhicules à 4 roues (%)" agentName="User" agentAttribute="slide_vehicule" vertical="true"  prefWidth="150.0" onValueChanged="#valueChanged"   />
          	</HBox>	         
          
          </children>

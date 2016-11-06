@@ -18,7 +18,7 @@
 	<center>
 		<VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
 			<padding>
-				<Insets bottom="10" left="10" right="10" top="10" />
+				<Insets bottom="10" left="10" right="10" top="3" />
 			</padding>
 			<children>
 				<Label text="Hôte" />

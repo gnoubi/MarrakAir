@@ -463,7 +463,7 @@ species userAgent skills:[remoteGUI]
 		n2020 <- 100 - n2007 ;
 		
 		my_date <- cycle;
-		
+		write "my_date";
 		
 		
 		if(selected_energy != selected_energy_old) {

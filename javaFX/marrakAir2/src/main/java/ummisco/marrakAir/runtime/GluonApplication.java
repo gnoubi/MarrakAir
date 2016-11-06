@@ -38,7 +38,7 @@ public class GluonApplication extends MobileApplication {
 	@Override
 	public void init() {
 		try {
-			MQTTConnector connection = new MQTTConnector("loc", null, null, null);
+			MQTTConnector connection = new MQTTConnector("localhost", null, null, null);
 			GamePresenter.setConnection(connection);
 			System.out.println("connected !");
 			
@@ -127,7 +127,7 @@ public class GluonApplication extends MobileApplication {
 	        controller.startHousekeeping(); 
 	    }*/
 		
-	//	Platform.exit();
-	//	System.exit(0);
+		/*Platform.exit();
+		System.exit(0);*/
 	}
 }

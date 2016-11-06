@@ -52,7 +52,7 @@ public class LineChartBox<X,Y> extends LineChart<X,Y> implements Observer {
 	
 	FollowedVariable flVariable;
 	List<InternalPlot<X, Y>> myPlots;
-	
+	boolean start;
 	ObservableList<Series<X,Y>> myData;
 /*	public LineChartBox()
 	{
@@ -71,6 +71,7 @@ public class LineChartBox<X,Y> extends LineChart<X,Y> implements Observer {
 		this.setCreateSymbols(false);
 		myData = FXCollections.observableArrayList();
 		this.setData(myData);
+		start = true;
 	}
 	
 	public LineChartBox( Axis<X> xAxis,  Axis<Y> yAxis,ObservableList<Series<X,Y>> data) {
@@ -79,6 +80,7 @@ public class LineChartBox<X,Y> extends LineChart<X,Y> implements Observer {
 		this.setAnimated(true);
 		myData = FXCollections.observableArrayList();
 		this.setData(myData);
+		start = true;
 
 		}
 	
@@ -136,8 +138,10 @@ public class LineChartBox<X,Y> extends LineChart<X,Y> implements Observer {
 			Runnable rn = new Runnable() {
 				@Override
 				public void run() {
-					 dt.getData().add(new XYChart.Data<X, Y>((X)data.get(dt.getAbsciss()), (Y)data.get(dt.getOrdinate())));
+						dt.getData().add(new XYChart.Data<X, Y>((X)data.get(dt.getAbsciss()), (Y)data.get(dt.getOrdinate())));
 				}
+
+				
 			};
 			Platform.runLater(rn);
 
@@ -153,11 +157,14 @@ public class LineChartBox<X,Y> extends LineChart<X,Y> implements Observer {
 			List<Map<String,Object>> datas = f.popLastData();
 			for(Map<String,Object> dts:datas)
 			{
+				System.out.println("how"+dts);
 				updateData(dts);
 				
 			}
 		}
 	}
+	
+	
 
 
 }
