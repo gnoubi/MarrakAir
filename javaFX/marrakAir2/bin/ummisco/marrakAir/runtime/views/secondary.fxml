@@ -21,13 +21,13 @@
 				<Insets bottom="10" left="10" right="10" top="0" />
 			</padding>
 			<children>
-				<Label text="Hôte" />
+				<Label text="Host:" />
 				<TextField fx:id="hote" />
 				<Label text="Port:" />
 				<TextField fx:id="port"/>
-				<Label text="Utilisateur" />
+				<Label text="User" />
 				<TextField fx:id="user" />
-				<Label text="Mot de passe" />
+				<Label text="Password" />
 				<TextField fx:id="password" />
 			</children>
 		</VBox>

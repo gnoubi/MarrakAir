@@ -138,6 +138,11 @@ public class LineChartBox<X,Y> extends LineChart<X,Y> implements Observer {
 			Runnable rn = new Runnable() {
 				@Override
 				public void run() {
+						
+						if(data.get(dt.getOrdinate()).equals(new Double(0))){
+							System.out.println("Clearing...");
+							dt.getData().clear();
+						}
 						dt.getData().add(new XYChart.Data<X, Y>((X)data.get(dt.getAbsciss()), (Y)data.get(dt.getOrdinate())));
 				}
 
@@ -153,6 +158,7 @@ public class LineChartBox<X,Y> extends LineChart<X,Y> implements Observer {
 	public void update(Observable o, Object arg) {
 		if(o instanceof FollowedVariable)
 		{
+			System.out.println("updating..");
 			FollowedVariable f = (FollowedVariable)o;
 			List<Map<String,Object>> datas = f.popLastData();
 			for(Map<String,Object> dts:datas)

@@ -332,9 +332,8 @@ global
 			
 		} //initdummyroad
 		
-		create infoDisplay{
-			
-		}
+		create infoDisplay{}
+		create legend{}
 		
 		// Génération des Postes de comptage DIGIT correspond au sens de comptage des PM et du sens de digitalisation du réseau routier
 		create carCounter from:PM with:[mid::int(read("Id")), isdigitOriented::bool(read("DIGIT"))]
@@ -420,7 +419,7 @@ species bound schedules:[] {
 		do die;
 	}*/
 	aspect base {
-		draw shape color: #red;
+		draw shape color: #purple;
 	}
 }
 
@@ -1260,113 +1259,115 @@ species building schedules: alived_building {
 
 species infoDisplay {
 
-		point location <- {1000,2000};
+	point location <- {1000,2000};
 	
-		float angle <- 3.0;
-		float cx <- cos(angle);
-		float sx <- sin(angle);
+	float angle <- 3.0;
+	float cx <- cos(angle);
+	float sx <- sin(angle);
 		
-		point size <- {2000,1500};
-		float dx;
-		float ymax <- 5.0;
-		int labelOffset <- 100;
+	point size <- {2000,1500};
+	float dx;
+	float ymax <- 5.0;
+	int labelOffset <- 100;
 	
-	list<float> infoList <-[0.0]; //<- list_with(20,0.0);//[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+	list<float> infoList <-[0.0]; 
 	
 	
-		point pos(point po)
-		{
-			float nx <- location.x + cx * po.x - sx * po.y;
-			float ny <- location.y + sx * po.x + cx * po.y;
-			return {nx,ny};
-		}
+	float info;
+	
+	
+	
+	point pos(point po)
+	{
+		float nx <- location.x + cx * po.x - sx * po.y;
+		float ny <- location.y + sx * po.x + cx * po.y;
+		return {nx,ny};
+	}
 	
 	aspect base{
 		
-		
-		
-		
+	 		
 	
-		float info <- mean (road collect each.traffic_density);
+		// info <- mean (road collect each.traffic_density);
+		if building != nil{
+		info <- mean(list(building collect(mean(each.pollutant_history[world.pollutentIndex("co")]))));
+		
 		add info to: infoList;
-		if info> ymax  
+		if info> ymax   
 			{
 				ymax <- info;
 			}
+			
+		}
+	
 	//	remove index:0 from: infoList; 
 	
 		float maxInfoList <- max([0.1,max(infoList)]);
 		int digits <- cycle = 0 ? 0: int(log(cycle));
-		dx <- size.x / (length(infoList));
-
 		
-		loop i from:0 to: length(infoList-2){
-	//		draw polygon([{location.x+i*dx,location.y-size.y*infoList[i]/ymax},{location.x+(i+1)*dx,location.y-size.y*infoList[i+1]/ymax},{location.x+(i+1)*dx,location.y},{location.x+i*dx,location.y}]) color: °blue; 
-			draw polygon([pos({i*dx,-size.y*infoList[i]/ymax}),pos({(i+1)*dx,-size.y*infoList[i+1]/ymax}),pos({(i+1)*dx,0}),pos({i*dx,0})]) color: °blue; 
-
-			draw line([pos({- 200, - size.y*maxInfoList/ymax}),pos({size.x, - size.y*maxInfoList/ymax})]) color: °white;
-			draw(string(maxInfoList)) color: °white at: pos({ 20, - size.y * maxInfoList/ymax - 20}) rotate: angle;
-			draw line([pos({- 200,5}),pos({size.x,5})]) color: °white;
-			draw("0") color: °white at: pos({20, 100}) rotate: angle;
-			draw line([pos({0, 200}),pos({0, - size.y * maxInfoList/ymax - 200})]) color: °white;
-			draw("NOx") at: pos({- 100, - size.y * maxInfoList /ymax /2 + labelOffset}) color: °white rotate: -90+angle;
-			draw("Time "+string(cycle)) at:  pos({size.x - 300 - digits*50, 100}) color: °white rotate: angle; 
-
-
-
-
-//			draw line([{location.x - 200,location.y - size.y*maxInfoList/ymax},{location.x+size.x,location.y - size.y*maxInfoList/ymax}]) color: °white;
-//			draw(string(maxInfoList)) color: °white at: {location.x + 20, location.y - size.y * maxInfoList/ymax - 20};
-//			draw line([{location.x - 200,location.y+5},{location.x+size.x,location.y+5}]) color: °white;
-//			draw("0") color: °white at: {location.x +20, location.y + 100};
-//			draw line([{location.x ,location.y+200},{location.x,location.y - size.y * maxInfoList/ymax - 200}]) color: °white;
-//			draw("NOx") at: {location.x - 100,location.y - size.y * maxInfoList /ymax /2 + labelOffset} color: °white rotate: -90;
-//			draw("Time "+string(cycle)) at:  {location.x + size.x - 300 - digits*50, location.y + 100} color: °white; 
-		
+		if length(infoList) > 1
+		{
+		dx <- size.x / (length(infoList)-1);
+			loop i from:0 to: length(infoList)-2{
+				draw polygon([pos({i*dx,-size.y*infoList[i]/ymax}),pos({(i+1)*dx,-size.y*infoList[i+1]/ymax}),pos({(i+1)*dx,0}),pos({i*dx,0})]) color: °blue; 
+			}
 		}
 		
-	/* 	aspect base2{
-		float info <- mean (road collect each.traffic_density);
-		float dx <- 100;
-		float scale <- 2000;
-		
-		
-		location <- {2000,2000};
-		
-		add info to: infoList;
-		remove index:0 from: infoList; 
-	
-		float maxInfoList <- max([0.1,max(infoList)]);
-		write(maxInfoList);
-		
-		loop i from:0 to: length(infoList-2){
-			draw polygon([{location.x+i*dx,location.y-scale*infoList[i]},{location.x+(i+1)*dx,location.y-scale*infoList[i+1]},{location.x+(i+1)*dx,location.y},{location.x+i*dx,location.y}]) color: °blue ; 
-			draw line([{location.x - 200,location.y - scale*maxInfoList},{location.x+20*dx,location.y - scale*maxInfoList}]) color: °white;
-			draw(string(maxInfoList)) color: °white at: {location.x + 20, location.y - scale * maxInfoList};
-			draw line([{location.x - 200,location.y+5},{location.x+20*dx,location.y+5}]) color: °white;
-			draw("0") color: °white at: {location.x +20, location.y + 100};
-			draw line([{location.x ,location.y+200},{location.x,location.y - scale * maxInfoList - 200}]) color: °white;
-			draw("NOx") at: {location.x - 100,location.y - scale * maxInfoList /2} color: °white rotate: -90;		
-			
-									//draw line([{location.x+i*dx,location.y-scale*infoList[i]},{location.x+(i+1)*dx,location.y-scale*infoList[i+1]}]) color: °blue; 
-		//	draw("NOx") color: °red font: font('Helvetica',200, #bold ) ;  
-	//		draw polygon([{location.x+i*dx,location.y-scale*infoList[i]},{location.x+(i+1)*dx,location.y-scale*infoList[i+1]},{location.x+(i+1)*dx,location.y},{location.x+i*dx,location.y}]) color: °blue ; 
-		
-		}	*/
-		
-		
-		//draw circle( 300) color: °white;
-		
-	//	draw("truc") size:1000 at: {10,10}; // taille en pixel
-		//draw image; image;
-	//	draw chart background:;
-	//	draw fan(10,2);
-	//	histo;
+		draw line([pos({- 200, - size.y*maxInfoList/ymax}),pos({size.x, - size.y*maxInfoList/ymax})]) color: °white;
+		draw(string(int(maxInfoList*1000)/1000)+" kg/day") color: °white at: pos({ 20, - size.y * maxInfoList/ymax - 20}) rotate: angle;
+		draw line([pos({- 200,5}),pos({size.x,5})]) color: °white;
+		draw("0") color: °white at: pos({20, 100}) rotate: angle;
+		draw line([pos({0, 200}),pos({0, - size.y * maxInfoList/ymax - 200})]) color: °white;
+		draw("NOx") at: pos({- 100, - size.y * maxInfoList /ymax /2 + labelOffset}) color: °white rotate: -90+angle;
+		draw("Time "+string(cycle)) at:  pos({size.x - 300 - digits*50, 100}) color: °white rotate: angle; 
+				
 	}
 	
+}// fin infoDisplay
+
+
+
+species legend schedules:[]
+{
+	float angle <- 3.0;
+	point size <- {500,200};
+	point location <- {8000,6500};
+	point offset <- {size.x * cos(angle), size.x * sin(angle)};
+	point textOffset <- {-125,40};
+	point labelOffset <- {-sin(angle)*size.y + 0.5 * size.x * cos(angle),cos(angle)*size.y + 0.5 * size.x * sin(angle)} ;
+		
+	geometry rect <- polygon([{0,0},{size.x*cos(angle),size.x*sin(angle)},{size.x*cos(angle)-size.y*sin(angle),size.y*cos(angle)+size.x*sin(angle)},{-size.y*sin(angle),size.y*cos(angle)}]);
+	
+
+	aspect base{
+		
+		
+		draw rect at: location color: °green;
+		draw rect at: location+offset color: °orange;
+		draw rect at: location+offset+offset color: °red;
+
+		draw("LOW") at: location+textOffset color:°white rotate: angle;
+		draw("MED") at: location+offset+textOffset color:°white rotate: angle;
+		draw("HIGH") at: location+offset+offset+textOffset color:°white rotate: angle;
+		draw("NOx level") at: location + labelOffset color:°white rotate: angle;
+		
+		
+		/* de cote pour une issue rotate 
+	float angle <- 3.0;
+	point size <- {500,200};
+	point location <- {9000,6000};
+	point offset <- {size.x * cos(angle), size.x * sin(angle)};
+	aspect base{
+		
+		
+		draw rectangle(size) at: location color:°green rotate: angle;
+		draw rectangle(size) at: location+offset color:°orange rotate: angle;
+		draw rectangle(size) at: location+offset+offset color:°red rotate: angle;
+		
+	*/	
+		
+	}
 }
-
-
 
 
 
@@ -1401,12 +1402,14 @@ experiment affect type:gui
 			species carHierarchyChange  aspect:base;
 			species carRandomChange aspect:base;
 			species infoDisplay aspect: base;
+			species legend aspect: base;
 			
-	/* 		chart "Traffic jam" size: {0.5, 0.5} position: {0.05, 0.05} title_font_size: 0 legend_font_size: 0 background: °black axes: °white style: line color: °white  tick_font_size: 1 y_range: {0,1}{
-	//		chart "Traffic jam"  type: histogram{
+/* 	 		chart "Traffic jam" size: {0.5, 0.5} position: {0.05, 0.05} type: stack{
+// 		chart "Traffic jam" size: {0.5, 0.5} position: {0.05, 0.05} title_font_size: 0 legend_font_size: 0 background: °black axes: °white style: line color: °white  tick_font_size: 1 y_range: {0,1}{
+
  				 data "Mean road traffic coefficient" value: mean (road collect each.traffic_density) style: line color: #blue ;
 
-	//			data "Max road traffic coefficient" value: road max_of (each.traffic_density) style: line color: #red ;
+	
 
 			}*/
 		}

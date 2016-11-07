@@ -97,18 +97,8 @@ public class PieChartBox extends PieChart implements Observer {
 		for(String tmp : variables)
 		{
 			String[] dt = tmp.split("::");
-			String label = "";
-			if(dt[1].equals("Motorbike")){
-				label = "Moto";
-			}
-			if(dt[1].equals("Truck")){
-				label = "Camion";
-			}
 			
-			if(dt[1].equals("Car")){
-				label = "Voiture";
-			}
-			InternalPlot plt = new InternalPlot(dt[0], label, Float.valueOf(dt[2]).floatValue());
+			InternalPlot plt = new InternalPlot(dt[0], dt[1], Float.valueOf(dt[2]).floatValue());
 
 			this.drawedData.add(plt);
 			
