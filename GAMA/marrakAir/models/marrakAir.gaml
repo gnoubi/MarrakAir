@@ -19,6 +19,7 @@ global
 	int MOTORBYKE_ID <- 0;
 	int CAR_ID <- 1;
 	int TRUCK_ID <- 2;
+	
 		
 	int TRAFFIC_LIGHT_DENSITY <- 10;
 	
