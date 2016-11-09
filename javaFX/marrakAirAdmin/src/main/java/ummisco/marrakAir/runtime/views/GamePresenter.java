@@ -43,6 +43,10 @@ public class GamePresenter {
 	@FXML
 	Button resetSim;
 
+	@FXML
+	Button toggleKeystoneB;
+	boolean toggleKeystone = true;
+
 
 	private void change(ObservableValue obs, Object oldValue, Object newValue)
 	{
@@ -174,6 +178,41 @@ public class GamePresenter {
 			}
 		}
 
+	}
+
+	@FXML
+	void toggleKeystoneEvent(ActionEvent event){
+		if(this.connection!=null){
+			try {
+				this.connection.sendMessage("show_keystone", toggleKeystone?0:1);
+				toggleKeystone = ! toggleKeystone;
+				System.out.println("message sended");
+				toggleKeystoneB.setDisable(true);
+				new Thread(){
+					@Override
+					public void run(){
+						try {
+							Thread.sleep(3000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						Platform.runLater(()->{
+							toggleKeystoneB.setDisable(false);
+						});
+					}
+				}.start();
+			} catch (MqttException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			if(toggleKeystone){
+				toggleKeystoneB.setText("Masquer le keystone");
+			}else{
+				toggleKeystoneB.setText("Afficher le keystone");
+			}
+		}
 	}
 
 	@FXML

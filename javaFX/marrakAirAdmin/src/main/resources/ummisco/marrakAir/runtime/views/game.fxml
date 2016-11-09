@@ -36,6 +36,11 @@
 					<graphic>
 					</graphic>
 				</Button>
+				<Button fx:id="toggleKeystoneB" mnemonicParsing="false" prefWidth="500"
+					text="Masquer le keystone" onAction="#toggleKeystoneEvent">
+					<graphic>
+					</graphic>
+				</Button>
 				<Button fx:id="resetSim" mnemonicParsing="false" prefWidth="500"
 					text="Reinitialiser la simulation" onAction="#buttonResetPressed">
 					<graphic>

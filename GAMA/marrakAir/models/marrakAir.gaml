@@ -104,6 +104,7 @@ global
 	
 	bool show_trafic <- true;
 	bool show_pollution <- true;
+	bool show_keystone <- true;
 	
 	 
 	map<float,list<list<float>>> readCopertData(string fileName)
@@ -190,6 +191,7 @@ global
 			do listen with_name:"show_trafic" store_to:"selected_trafic";
 			do listen with_name:"reset" store_to:"reset_simulation";
 			do listen with_name:"copert" store_to:"copert_2020_rate";
+			do listen with_name:"show_keystone" store_to:"selected_keystone";
 		}
 		
 	}
@@ -299,7 +301,7 @@ global
 			alived_building <- alived_building accumulate(neighboor_buildings); 
 		}
 		
-		create bound from: shape_file_bound; 
+		create bound from: shape_file_bound;
 		// Génération du réseau routier Attention aux attributs caractérisant la hiérarchie du réseau routier en code (Vitesse # Hiérarchie) + Vitesse réglementaire
 		create road from: mynetwork with:[mid::int(read("osm_id")), oneway::int(read("oneway")),hierarchy::float(read("TYPE_OSM_C")),roundaboutId::int(read("roundabout")),mspeed::float(read("maxspeed"))#km/#h]
 		{
@@ -418,7 +420,6 @@ global
 } //global
 
 species bound schedules:[] {
-	int keystoneIsActive <- 1;
 	/*reflex doDie when: cycle=2{
 		do die;
 	}*/
@@ -426,10 +427,10 @@ species bound schedules:[] {
 
 	
 	aspect base {
-		if keystoneIsActive = 1 {
+		if (show_keystone){
 			draw polygon([{1000,1000},{1000,5000}, {8000,5000}, {8000,1000}]) color: #black;
 			draw shape color: #red;	
-			if cycle > 0 {keystoneIsActive <-0;}		
+			//if cycle > 0 {show_keystone <-false;}		
 		}
 	}
 }
@@ -474,6 +475,7 @@ species userAgent skills:[remoteGUI]
 	float selected_pollution <- -1;
 	float reset_simulation <- 0;
 	float copert_2020_rate;
+	float selected_keystone <- 1;
 	
 	//float polution_particule_intantanee <- 0 ;
 	reflex update_data when: (cycle mod 12) = 0
@@ -524,6 +526,11 @@ species userAgent skills:[remoteGUI]
 		if(selected_pollution >=0) {
 			show_pollution <- selected_pollution = 1;
 			selected_pollution <- -1.0;
+		}
+		
+		if(selected_keystone >= 0){
+			show_keystone <- selected_keystone = 1;
+			selected_keystone <- -1.0;
 		}
 		
 		if(reset_simulation = 1) {
@@ -1398,7 +1405,7 @@ experiment affect type:gui
 	
 	output {
 
-		display Suivi_Vehicules_3D  type:opengl background:(first(bound).keystoneIsActive = 1?#white:#black) refresh_every:1 use_shader: true keystone: true //refresh_every:15 
+		display Suivi_Vehicules_3D  type:opengl background:(show_keystone = true ?#white:#black) refresh_every:1 use_shader: true keystone: true //refresh_every:15 
 		{
 			//grid parcArea;
 			species bound aspect: base;
