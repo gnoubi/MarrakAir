@@ -57,7 +57,7 @@ public class SecondaryPresenter {
                
                // add prompt text to the textfields
                hote.setPromptText(GamePresenter.getConnection()==null?"localhost":GamePresenter.getConnection().SERVER_URL);
-               port.setPromptText(GamePresenter.getConnection()==null?"1889":GamePresenter.getConnection().SERVER_PORT);
+               port.setPromptText(GamePresenter.getConnection()==null?"1883":GamePresenter.getConnection().SERVER_PORT);
                password.setPromptText(GamePresenter.getConnection()==null?"password":GamePresenter.getConnection().PASSWORD);
                user.setPromptText(GamePresenter.getConnection()==null?"admin":GamePresenter.getConnection().LOGIN);
                

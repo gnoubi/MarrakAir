@@ -23,20 +23,20 @@
 	<center>
 		<VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
 			<padding>
-				<Insets bottom="10" left="10" right="10" top="10" />
+				<Insets bottom="10" left="5" right="5" top="0" />
 			</padding>
 			<children>
-				<Button fx:id="showPollutantB" mnemonicParsing="false"
+				<Button fx:id="showPollutantB" mnemonicParsing="false" prefWidth="500"
 					text="Masquer la pollution" onAction="#buttonPollutionPressed">
 					<graphic>
 					</graphic>
 				</Button>
-				<Button fx:id="showTrafficB" mnemonicParsing="false"
+				<Button fx:id="showTrafficB" mnemonicParsing="false" prefWidth="500"
 					text="Masquer le trafic" onAction="#buttonTrafficPressed">
 					<graphic>
 					</graphic>
 				</Button>
-				<Button fx:id="resetSim" mnemonicParsing="false"
+				<Button fx:id="resetSim" mnemonicParsing="false" prefWidth="500"
 					text="Reinitialiser la simulation" onAction="#buttonResetPressed">
 					<graphic>
 					</graphic>
