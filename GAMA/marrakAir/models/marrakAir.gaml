@@ -418,12 +418,19 @@ global
 } //global
 
 species bound schedules:[] {
-	
+	int keystoneIsActive <- 1;
 	/*reflex doDie when: cycle=2{
 		do die;
 	}*/
+	
+
+	
 	aspect base {
-		draw shape color: #purple;
+		if keystoneIsActive = 1 {
+			draw polygon([{1000,1000},{1000,5000}, {8000,5000}, {8000,1000}]) color: #black;
+			draw shape color: #red;	
+			if cycle > 0 {keystoneIsActive <-0;}		
+		}
 	}
 }
 
@@ -1391,7 +1398,7 @@ experiment affect type:gui
 	
 	output {
 
-		display Suivi_Vehicules_3D  type:opengl background:#black refresh_every:1 use_shader: true keystone: true //refresh_every:15 
+		display Suivi_Vehicules_3D  type:opengl background:(first(bound).keystoneIsActive = 1?#white:#black) refresh_every:1 use_shader: true keystone: true //refresh_every:15 
 		{
 			//grid parcArea;
 			species bound aspect: base;
