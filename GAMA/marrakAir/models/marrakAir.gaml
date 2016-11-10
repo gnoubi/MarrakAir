@@ -437,7 +437,7 @@ species bound schedules:[] {
 		if (show_keystone){
 			draw polygon([{1000,1000},{1000,5000}, {8000,5000}, {8000,1000}]) color: #black;
 			draw shape color: #red;	
-			//if cycle > 0 {show_keystone <-false;}		
+			if cycle > 0 {show_keystone <-false;}		
 		}
 	}
 }
@@ -1294,14 +1294,14 @@ species building schedules: alived_building {
 
 species infoDisplay {
 
-	point location <- {800,2000};
+	point location <- {800,1700};
 	
 	float cx <- cos(ANGLE);
 	float sx <- sin(ANGLE);
 		
-	point dimensions <- {2500,2000};
+	point dimensions <- {2500,1500};
 	float dx;
-	float ymax <- 3.0;
+	float ymax <- 2;
 	int labelOffset <- 200;
 	
 	list<float> infoList <-[0.0]; 
@@ -1317,6 +1317,16 @@ species infoDisplay {
 		float ny <- location.y + sx * po.x + cx * po.y;
 		return {nx,ny};
 	}
+	
+	string as_time(int t)
+	{
+		int hh <- int(t / 3600);
+		int mm <- int(t / 60) - 60 * hh;
+		int ss <- int(t - 60 * mm - 3600 * hh);
+		
+		return (hh< 10? " ":"")+string(hh) + (mm< 10? "h  ":"h ") + string(mm) + (ss< 10? "mn  ":"mn ") +string(ss)+"s";
+	}
+	
 	
 	aspect base{
 		
@@ -1353,8 +1363,9 @@ species infoDisplay {
 		draw("0") color: °white font: font(20) at: pos({20, 190}) rotate: ANGLE;
 		draw 5#m around line([pos({0, 200}),pos({0, - dimensions.y * maxInfoList/ymax - 200})]) color: °white;
 		draw("NOx") font: font(20) at: pos({- 50, - dimensions.y * maxInfoList /ymax /2 + labelOffset}) color: °white rotate: -90+ANGLE;
-		draw("Time "+string(cycle)) font: font(20) at:  pos({dimensions.x - 650 - digits*80, 190}) color: °white rotate: ANGLE; 
-
+	//	draw("Time "+string(cycle)) font: font(20) at:  pos({dimensions.x - 650 - digits*80, 190}) color: °white rotate: ANGLE; 
+		draw(as_time(cycle*5)) font: font(20) at:  pos({dimensions.x - 900, 190}) color: °white rotate: ANGLE; 
+	
 	}
 	
 }// fin infoDisplay
