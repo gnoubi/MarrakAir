@@ -19,9 +19,10 @@ global
 	int MOTORBYKE_ID <- 0;
 	int CAR_ID <- 1;
 	int TRUCK_ID <- 2;
-	
+	float ANGLE <-2.3;
 		
 	int TRAFFIC_LIGHT_DENSITY <- 10;
+	list<int> TRAFFIC_LIGHT_SIZES <- [5,3];
 	
 	
 	float MOTORBYKE_COEF <- 2;
@@ -65,7 +66,6 @@ global
 	file shape_file_buildings <- file("../includes/SIG_simu/buildings_gama.shp");
 	file shape_file_bound <- file("../includes/keystone_layer.shp");
 	file mydummynetwork <- file("../includes/SIG_demonstrateur/dummy_roads.shp");
-	
 		
 	//COMPTAGES ROUTIER
 	matrix countingData <- matrix(csv_file( '../includes/PM_Test.csv', ';'));
@@ -294,7 +294,7 @@ global
 		}
 		create landscape from: airport
 		{
-			mycolor <- #grey;
+			mycolor <- rgb(30,30,30);
 		}
 		create pollutant_grid from:cell_shape{
 			neighboor_buildings <- building at_distance 70#m;
@@ -315,8 +315,8 @@ global
 			
 			// debut bac a sable de Tri
 			if hierarchy <=5{
-				aspect_size <- 3;
-			}
+				aspect_size <- TRAFFIC_LIGHT_SIZES[0];
+			}else{aspect_size <-TRAFFIC_LIGHT_SIZES[1];}
 			segments_number <- length(shape.points)-1;
 			loop i from: 0 to: segments_number-1{
 				add shape.points[i+1].x - shape.points[i].x to: segments_x;
@@ -330,11 +330,18 @@ global
 			
 		} //initroad
 		
-		create dummy_road from: mydummynetwork with:[oneway::int(read("ONEWAY")),linkedToRoad::int(read("linkedToRoad"))]
+		create dummy_road from: mydummynetwork with:[oneway::int(read("oneway")),linkedToRoad::int(read("linkedToRoad"))]
 		{
-		//	point end <- last(shape.points) ;
-		//	point begin <- first(shape.points);
-			
+			aspect_size <- TRAFFIC_LIGHT_SIZES[0];
+			segments_number <- length(shape.points)-1;
+			loop i from: 0 to: segments_number-1{
+				add shape.points[i+1].x - shape.points[i].x to: segments_x;
+				add shape.points[i+1].y - shape.points[i].y to: segments_y;
+				add sqrt(segments_x[i]^2 + segments_y[i]^2) to: segments_length;
+				if oneway != 1 {
+					add {segments_y[i]/segments_length[i]*4,- segments_x[i]/segments_length[i]*4} to: lane_position_shift;
+				}
+			}
 		} //initdummyroad
 		
 		create infoDisplay{}
@@ -595,7 +602,7 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 	float density <- 1.0;
 	float traffic_density <- 0.0;
 	int segments_number ;
-	int aspect_size <-2 ;
+	int aspect_size <-1 ;
 //	rgb aspect_color <- °white;
 	list<float> segments_x <- [];
 	list<float> segments_y <- [];
@@ -710,21 +717,73 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 		point new_point;
 		int lights_number;
 
+		if cycle > 0 {
+		
+			density <- min([10,traffic_density]);
+			
+	
+		 	loop i from: 0 to: segments_number-1{
+		 	
+		 	
+		 		
+		 		// pour afficher des petits triangles pour indiquer le sens de circulation sur chaque route (pour faire des tests)
+//		 		if oneway = 1 {
+//		 			float angleTriangle <- acos(segments_x[i]/segments_length[i]);
+//		 			angleTriangle <- segments_y[i]<0 ? - angleTriangle : angleTriangle;
+//					draw triangle(10) at:  shape.points[i] + {0.5*segments_x[i],0.5*segments_y[i]} rotate: 90+angleTriangle color: °cyan;
+//		 		}
+		 		
+		 		
+				lights_number <- max([1,int(density * segments_length[i]/150)]);
+			 	loop j from:0 to: lights_number-1{
+			 		if oneway = 1{
+			 			
+			 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,100)/100)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,100)/100)/lights_number};
+							draw circle(aspect_size, new_point) color: °white;
+			 		}else{
+			 			
+			 				new_point <- {lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j -  mod(cycle,100)/100)/lights_number, lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j - mod(cycle,100)/100)/lights_number};
+							draw circle(aspect_size, new_point) color: °white;
+							new_point <- {-lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j +  mod(cycle,100)/100)/lights_number, -lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j + mod(cycle,100)/100)/lights_number};
+							draw circle(aspect_size, new_point) color: °white;
+							
+			 		}
+				
+					
+				}
+			}
+			
+		}else{
+			draw 5#m around shape depth: 0 color:#purple  ;
+		}
 		
 		
+	}
+} //road
+
+species dummy_road schedules: [] 
+{
+	int oneway;
+	float density <- 1.0;
+	float traffic_density <- 8.0;
+	int segments_number ;
+	int aspect_size <-1 ;	
+	list<float> segments_x <- [];
+	list<float> segments_y <- [];
+	list<float> segments_length <- [];
+	list<point> lane_position_shift <- [];
+
+	aspect car_lights
+	{
 		
-		density <- min([15,traffic_density]);
+		point new_point;
+		int lights_number;
+	//	draw 5#m around shape depth: 0 color:#white  ;
+		
+		
+		density <- min([10,traffic_density]);
 
 	 	loop i from: 0 to: segments_number-1{
-	 		
-	 		// pour afficher des petits triangles pour indiquer le sens de circulation sur chaque route (pour faire des tests)
-	 		if oneway = 1 {
-	 			float angleTriangle <- acos(segments_x[i]/segments_length[i]);
-	 			angleTriangle <- segments_y[i]<0 ? - angleTriangle : angleTriangle;
-				draw triangle(10) at:  shape.points[i] + {0.5*segments_x[i],0.5*segments_y[i]} rotate: 90+angleTriangle color: °cyan;
-	 		}
-	 		
-	 		
 			lights_number <- max([1,int(density * segments_length[i]/150)]);
 		 	loop j from:0 to: lights_number-1{
 		 		if oneway = 1{
@@ -745,52 +804,6 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 		}
 		
 		
-	}
-} //road
-
-species dummy_road schedules: [] 
-{
-	int oneway;
-	float density <- 1.0;
-	float traffic_density <- 0.0;
-	int segments_number ;
-	int aspect_size <-2 ;	
-	list<float> segments_x <- [];
-	list<float> segments_y <- [];
-	list<float> segments_length <- [];
-	list<point> lane_position_shift <- [];
-
-	aspect car_lights
-	{
-		
-//		point new_point;
-//		int lights_number;
-//
-//		
-//		
-//		density <- min([15,traffic_density]);
-//
-//	 	loop i from: 0 to: segments_number-1{
-//			lights_number <- max([1,int(density * segments_length[i]/150)]);
-//		 	loop j from:0 to: lights_number-1{
-//		 		if oneway = 1{
-//		 			
-//		 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,100)/100)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,100)/100)/lights_number};
-//						draw circle(aspect_size, new_point) color: °white;
-//		 		}else{
-//		 			
-//		 				new_point <- {lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j -  mod(cycle,100)/100)/lights_number, lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j - mod(cycle,100)/100)/lights_number};
-//						draw circle(aspect_size, new_point) color: °white;
-//						new_point <- {-lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j +  mod(cycle,100)/100)/lights_number, -lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j + mod(cycle,100)/100)/lights_number};
-//						draw circle(aspect_size, new_point) color: °white;
-//						
-//		 		}
-//			
-//				
-//			}
-//		}
-//		
-//		
 	}
 } //dummy_road
 
@@ -1267,7 +1280,8 @@ species building schedules: alived_building {
 			float rate <- pollutant[world.pollutentIndex("pm")]/maxNox_buildings;
 			
 			rgb mcol <- ((maxNox_buildings/2)>rate)?#green : (maxNox_buildings<rate?#red:#orange);
-			draw shape color: mcol depth: 0;
+			draw shape color: mcol depth: 0 at: location +{0,0,5};
+			//draw shape color: mcol depth: 0 ;
 		//	draw shape color: rgb(255,int((1-pollutant[world.pollutentIndex("nox")]/maxNox_buildings)*255),255) depth: height;
 		}
 		else
@@ -1280,16 +1294,15 @@ species building schedules: alived_building {
 
 species infoDisplay {
 
-	point location <- {1000,2000};
+	point location <- {800,2000};
 	
-	float angle <- 3.0;
-	float cx <- cos(angle);
-	float sx <- sin(angle);
+	float cx <- cos(ANGLE);
+	float sx <- sin(ANGLE);
 		
-	point size <- {2000,1500};
+	point dimensions <- {2500,2000};
 	float dx;
-	float ymax <- 5.0;
-	int labelOffset <- 150;
+	float ymax <- 3.0;
+	int labelOffset <- 200;
 	
 	list<float> infoList <-[0.0]; 
 	
@@ -1307,7 +1320,7 @@ species infoDisplay {
 	
 	aspect base{
 		
-	 		
+	 	//	write(info);
 	
 		// info <- mean (road collect each.traffic_density);
 		if building != nil{
@@ -1328,19 +1341,20 @@ species infoDisplay {
 		
 		if length(infoList) > 1
 		{
-		dx <- size.x / (length(infoList)-1);
+		dx <- dimensions.x / (length(infoList)-1);
 			loop i from:0 to: length(infoList)-2{
-				draw polygon([pos({i*dx,-size.y*infoList[i]/ymax}),pos({(i+1)*dx,-size.y*infoList[i+1]/ymax}),pos({(i+1)*dx,0}),pos({i*dx,0})]) color: °blue; 
+				draw polygon([pos({i*dx,-dimensions.y*infoList[i]/ymax}),pos({(i+1)*dx,-dimensions.y*infoList[i+1]/ymax}),pos({(i+1)*dx,0}),pos({i*dx,0})]) color: °blue; 
 			}
 		}
 
-		draw line([pos({- 200, - size.y*maxInfoList/ymax}),pos({size.x, - size.y*maxInfoList/ymax})]) color: °white;
-		draw(string(int(maxInfoList*1000)/1000)+" kg/day") color: °white at: pos({ 20, - size.y * maxInfoList/ymax - 20}) rotate: angle;
-		draw line([pos({- 200,5}),pos({size.x,5})]) color: °white;
-		draw("0") color: °white at: pos({20, 140}) rotate: angle;
-		draw line([pos({0, 200}),pos({0, - size.y * maxInfoList/ymax - 200})]) color: °white;
-		draw("NOx") at: pos({- 50, - size.y * maxInfoList /ymax /2 + labelOffset}) color: °white rotate: -90+angle;
-		draw("Time "+string(cycle)) at:  pos({size.x - 450 - digits*75, 140}) color: °white rotate: angle; 
+		draw 5#m around (line([pos({- 200, - dimensions.y*maxInfoList/ymax}),pos({dimensions.x, - dimensions.y*maxInfoList/ymax})])) color: °white;
+		draw(string(int(maxInfoList*1000)/1000)+" kg/day") font: font(20) color: °white at: pos({ 20, - dimensions.y * maxInfoList/ymax - 25}) rotate: ANGLE;
+		draw 5#m around line([pos({- 200,5}),pos({dimensions.x,5})]) color: °white;
+		draw("0") color: °white font: font(20) at: pos({20, 190}) rotate: ANGLE;
+		draw 5#m around line([pos({0, 200}),pos({0, - dimensions.y * maxInfoList/ymax - 200})]) color: °white;
+		draw("NOx") font: font(20) at: pos({- 50, - dimensions.y * maxInfoList /ymax /2 + labelOffset}) color: °white rotate: -90+ANGLE;
+		draw("Time "+string(cycle)) font: font(20) at:  pos({dimensions.x - 650 - digits*80, 190}) color: °white rotate: ANGLE; 
+
 	}
 	
 }// fin infoDisplay
@@ -1349,27 +1363,30 @@ species infoDisplay {
 
 species legend schedules:[]
 {
-	float angle <- 3.0;
+
 	point size <- {500,200};
-	point location <- {8000,6500};
-	point offset <- {size.x * cos(angle), size.x * sin(angle)};
-	point textOffset <- {-125,40};
-	point labelOffset <- {-sin(angle)*size.y + 0.5 * size.x * cos(angle),cos(angle)*size.y + 0.5 * size.x * sin(angle)} ;
+	point location <- {8000,6500,1};
+	point offset <- {size.x * cos(ANGLE), size.x * sin(ANGLE)};
+	point textOffset <- {-125,40,2};
+	point tmp <-{- 0.25*size.x,2*size.y}; //{- 0.5*size.x,0.5*size.y};
+	point labelOffset <- {-sin(ANGLE)*tmp.y + tmp.x * cos(ANGLE),cos(ANGLE)*tmp.y + tmp.x * sin(ANGLE),2} ;
 		
-	geometry rect <- polygon([{0,0},{size.x*cos(angle),size.x*sin(angle)},{size.x*cos(angle)-size.y*sin(angle),size.y*cos(angle)+size.x*sin(angle)},{-size.y*sin(angle),size.y*cos(angle)}]);
+	geometry rect <- polygon([{0,0},{size.x*cos(ANGLE),size.x*sin(ANGLE)},{size.x*cos(ANGLE)-size.y*sin(ANGLE),size.y*cos(ANGLE)+size.x*sin(ANGLE)},{-size.y*sin(ANGLE),size.y*cos(ANGLE)}]);
 	
 
 	aspect base{
+//			file images <- file("../includes/6.png");
 		
-		
+//		draw images at:{0,0,3} ;
+			
 		draw rect at: location color: °green;
 		draw rect at: location+offset color: °orange;
 		draw rect at: location+offset+offset color: °red;
 
-		draw("LOW") at: location+textOffset color:°white rotate: angle;
-		draw("MED") at: location+offset+textOffset color:°white rotate: angle;
-		draw("HIGH") at: location+offset+offset+textOffset color:°white rotate: angle;
-		draw("NOx level") at: location + labelOffset color:°white rotate: angle;
+		draw("LOW") at: location+textOffset color:°white rotate: ANGLE;
+		draw("MED") at: location+offset+textOffset color:°white rotate: ANGLE;
+		draw("HIGH") at: location+offset+offset+textOffset color:°white rotate: ANGLE;
+		draw("NOx level") at: location + labelOffset font: font(30) color:°white rotate: ANGLE;
 		
 		
 		/* de cote pour une issue sur le rotate 
@@ -1405,7 +1422,10 @@ experiment affect type:gui
 	
 	output {
 
-		display Suivi_Vehicules_3D  type:opengl background:(show_keystone = true ?#white:#black) refresh_every:1 use_shader: true keystone: true //refresh_every:15 
+
+		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,8500}  rotate: ANGLE  background:(show_keystone = 1?#white:rgb(10,10,10)) refresh_every:10 use_shader: true keystone: true//[{0.158,0.265},{0.917,0.26},{0.12,0.764},{0.947,0.782}]  
+
+
 		{
 			//grid parcArea;
 			species bound aspect: base;
