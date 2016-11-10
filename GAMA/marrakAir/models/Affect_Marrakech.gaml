@@ -383,9 +383,9 @@ global
 	}
 	
 	// Définition de la fin de la simulation 24h + 1sec pour obtenir le dernier 1/4h
-	reflex stop_sim when:  time >= 24#h+1#sec
+	reflex stop_sim when: cycle!=0 and (cycle mod 11000) = 0
 	{
-		do halt;
+		do reset;
 	} 
 } //global
 
@@ -491,7 +491,6 @@ species userAgent skills:[remoteGUI]
 		}
 		
 		if(reset_simulation = 1) {
-			write "gonna reset";
 			ask world {
 				do reset;
 			}
