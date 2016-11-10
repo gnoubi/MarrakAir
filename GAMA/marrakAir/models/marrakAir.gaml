@@ -1423,27 +1423,27 @@ species legend schedules:[]
 
 // espece temporaire, juste pour modifier plus facilement les couleurs pour ce soir
 species colorSet schedules:[]{	
-//	rgb BACKGROUND <- rgb(10,10,10);
-//	rgb TEXT1 <- #white;
-//	rgb LIGHTS <- #white;
-//	rgb TEXT2 <- #white;
-//	rgb CURVES <- #blue;
-//	rgb AIRPORT <-  rgb(30,30,30);
-//	rgb WATER <- #blue;
-//	rgb BUILDING1 <- #green;
-//	rgb BUILDING2 <- #orange;
-//	rgb BUILDING3 <- #red;
+	rgb BACKGROUND <- rgb(10,10,10);
+	rgb TEXT1 <- #white;
+	rgb LIGHTS <- #white;
+	rgb TEXT2 <- #white;
+	rgb CURVES <- #blue;
+	rgb AIRPORT <-  rgb(30,30,30);
+	rgb WATER <- #blue;
+	rgb BUILDING1 <- #green;
+	rgb BUILDING2 <- #orange;
+	rgb BUILDING3 <- #red;
 		
-	rgb BACKGROUND <- rgb(250,250,250);
-	rgb TEXT1 <- rgb(97,186,231);
-	rgb LIGHTS <- rgb(235,99,25);
-	rgb TEXT2 <-rgb(97,186,231);
-	rgb CURVES <- rgb(97,186,231);
-	rgb AIRPORT <-  rgb(200,200,200);
-	rgb WATER <- rgb(97,186,231);
-	rgb BUILDING1 <- rgb(17,99,13);
-	rgb BUILDING2 <- rgb(203,105,25);
-	rgb BUILDING3 <- rgb(117,20,17);
+//	rgb BACKGROUND <- rgb(250,250,250);
+//	rgb TEXT1 <- rgb(97,186,231);
+//	rgb LIGHTS <- rgb(235,99,25);
+//	rgb TEXT2 <-rgb(97,186,231);
+//	rgb CURVES <- rgb(97,186,231);
+//	rgb AIRPORT <-  rgb(200,200,200);
+//	rgb WATER <- rgb(97,186,231);
+//	rgb BUILDING1 <- rgb(17,99,13);
+//	rgb BUILDING2 <- rgb(203,105,25);
+//	rgb BUILDING3 <- rgb(117,20,17);
 	
 	
 }
