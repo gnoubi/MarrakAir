@@ -30,6 +30,7 @@ global
 	float TRUCK_COEF <- 1;
 	
 	
+	
 	// Pas-de-temps à modifier en fonction de la taille du réseau
 	float stepDuration <- 5#s; //#mn ; 	
 	
@@ -106,6 +107,7 @@ global
 	bool show_trafic <- true;
 	bool show_pollution <- true;
 	bool show_keystone <- true;
+	bool show_legend <- true;
 	
 	 
 	map<float,list<list<float>>> readCopertData(string fileName)
@@ -440,7 +442,7 @@ species bound schedules:[] {
 	
 	aspect base {
 		if (show_keystone){
-			draw polygon([{1000,1000},{1000,5000}, {8000,5000}, {8000,1000}]) color: #black;
+			draw polygon([{1000,800,-1},{820,5970,-1}, {8930,6320,-1}, {9150,1150,-1}]) color: #black;
 			draw shape color: #red;	
 			if cycle > 0 {show_keystone <-false;}		
 		}
@@ -1299,7 +1301,7 @@ species building schedules: alived_building {
 
 species infoDisplay {
 
-	point location <- {800,1700};
+	point location <- {800,2500};
 	
 	float cx <- cos(ANGLE);
 	float sx <- sin(ANGLE);
@@ -1387,7 +1389,22 @@ species legend schedules:[]
 	point tmp <-{- 0.25*size.x,2*size.y}; //{- 0.5*size.x,0.5*size.y};
 	point labelOffset <- {-sin(ANGLE)*tmp.y + tmp.x * cos(ANGLE),cos(ANGLE)*tmp.y + tmp.x * sin(ANGLE),2} ;
 		
-	geometry rect <- polygon([{0,0},{size.x*cos(ANGLE),size.x*sin(ANGLE)},{size.x*cos(ANGLE)-size.y*sin(ANGLE),size.y*cos(ANGLE)+size.x*sin(ANGLE)},{-size.y*sin(ANGLE),size.y*cos(ANGLE)}]);
+	geometry rect <- polygon([{0,0},rotate({size.x,0}),rotate({size.x,size.y}),rotate({0,size.y})]);
+
+	
+	point rotate(point po)
+	{
+		float nx <- cos(ANGLE) * po.x - sin(ANGLE) * po.y;
+		float ny <- sin(ANGLE) * po.x + cos(ANGLE) * po.y;
+		return {nx,ny,po.z};
+	}
+	
+/* 	action draw_legend(string side, int y)
+	{
+		draw (side) at: rotate({8000,y,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
+	//	draw 5#m around polyline([rotate({8000-50, y-23,6}), rotate({6500, y-23,6}),{5500,2900,6}])  color: first(colorSet).TEXT1;
+	//	draw circle(50) at: {5500,2900} color: first(colorSet).TEXT1;
+	}*/
 	
 
 	aspect base{
@@ -1405,6 +1422,20 @@ species legend schedules:[]
 		draw("NOx level") at: location + labelOffset font: font(30) color:first(colorSet).TEXT1 rotate: ANGLE;
 		
 		
+		draw ("Gueliz") at: rotate({8000,2000,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
+		draw 5#m around polyline([rotate({8000-50, 2000-23,6}), rotate({6500, 2000-23,6}),{5500,2900,6}])  color: first(colorSet).TEXT1;
+		draw circle(50) at: {5500,2900} color: first(colorSet).TEXT1;
+//		ask draw_legend("Gueliz",2000);
+		
+		draw ("Koutoubia") at: rotate({8000,5000,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
+		draw 5#m around polyline([rotate({8000-50, 5000-23,6}), rotate({7300, 5000-23,6}),{6900,4000,6}])  color: first(colorSet).TEXT1;
+		draw circle(50) at: {6900,4000} color: first(colorSet).TEXT1;
+		
+		draw ("UCA") at: rotate({8000,500,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
+		draw 5#m around polyline([rotate({8000-50, 300-23,6}), rotate({7300, 300-23,6}),{4970,1000,6}])  color: first(colorSet).TEXT1;
+		draw circle(50) at: {4970,1000} color: first(colorSet).TEXT1;
+		
+		
 		/* de cote pour une issue sur le rotate 
 			float angle <- 3.0;
 			point size <- {500,200};
@@ -1416,12 +1447,11 @@ species legend schedules:[]
 			draw rectangle(size) at: location+offset+offset color:°red rotate: angle;
 		
 	*/	
-		draw logos at: {1000,6500,3} size:{1678,186} ;
 		
 	}
 }
 
-// espece temporaire, juste pour modifier plus facilement les couleurs pour ce soir
+// espece temporaire, juste pour modifier plus facilement les couleurs et switcher entre différents jeux de couleur. Je ferai un truc plus propre plus tard
 species colorSet schedules:[]{	
 	rgb BACKGROUND <- rgb(10,10,10);
 	rgb TEXT1 <- #white;
@@ -1444,9 +1474,9 @@ species colorSet schedules:[]{
 //	rgb BUILDING1 <- rgb(17,99,13);
 //	rgb BUILDING2 <- rgb(203,105,25);
 //	rgb BUILDING3 <- rgb(117,20,17);
+//	
 	
-	
-}
+}// fin du colorset temporaire
 
 
 
@@ -1467,7 +1497,8 @@ experiment affect type:gui
 	output {
 
 
-		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,8500}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:10 use_shader: true keystone: true//[{0.158,0.265},{0.917,0.26},{0.12,0.764},{0.947,0.782}]  
+//		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,8500}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:10 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
+		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:10 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
 
 
 		{
