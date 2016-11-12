@@ -46,6 +46,10 @@ public class GamePresenter {
 	@FXML
 	Button toggleKeystoneB;
 	boolean toggleKeystone = true;
+	
+	@FXML
+	Button toggleLegendB;
+	boolean toggleLegend = true;
 
 
 	private void change(ObservableValue obs, Object oldValue, Object newValue)
@@ -215,6 +219,40 @@ public class GamePresenter {
 		}
 	}
 
+	@FXML
+	void toggleLegendEvent(ActionEvent event){
+		if(this.connection!=null){
+			try {
+				this.connection.sendMessage("show_legend", toggleLegend?0:1);
+				toggleLegend = ! toggleLegend;
+				System.out.println("message sended");
+				toggleLegendB.setDisable(true);
+				new Thread(){
+					@Override
+					public void run(){
+						try {
+							Thread.sleep(3000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						Platform.runLater(()->{
+							toggleLegendB.setDisable(false);
+						});
+					}
+				}.start();
+			} catch (MqttException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			if(toggleLegend){
+				toggleLegendB.setText("Masquer la légende");
+			}else{
+				toggleLegendB.setText("Afficher la légende");
+			}
+		}
+	}
 	@FXML
 	void buttonResetPressed(ActionEvent event){
 		if(this.connection!=null)

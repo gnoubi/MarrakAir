@@ -46,6 +46,11 @@
 					<graphic>
 					</graphic>
 				</Button>
+				<Button fx:id="toggleLegendB" mnemonicParsing="false" prefWidth="500"
+					text="Masquer la légende" onAction="#toggleLegendEvent">
+					<graphic>
+					</graphic>
+				</Button>
 			</children>
 
 		</VBox>

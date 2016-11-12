@@ -195,6 +195,7 @@ global
 			do listen with_name:"reset" store_to:"reset_simulation";
 			do listen with_name:"copert" store_to:"copert_2020_rate";
 			do listen with_name:"show_keystone" store_to:"selected_keystone";
+			do listen with_name:"show_legend" store_to:"selected_legend";
 		}
 		
 	}
@@ -444,7 +445,7 @@ species bound schedules:[] {
 		if (show_keystone){
 			draw polygon([{1000,800,-1},{820,5970,-1}, {8930,6320,-1}, {9150,1150,-1}]) color: #black;
 			draw shape color: #red;	
-			if cycle > 0 {show_keystone <-false;}		
+			//if cycle > 0 {show_keystone <-false;}		
 		}
 	}
 }
@@ -490,6 +491,7 @@ species userAgent skills:[remoteGUI]
 	float reset_simulation <- 0;
 	float copert_2020_rate;
 	float selected_keystone <- 1;
+	float selected_legend <- 1;
 	
 	//float polution_particule_intantanee <- 0 ;
 	reflex update_data when: (cycle mod 12) = 0
@@ -545,6 +547,11 @@ species userAgent skills:[remoteGUI]
 		if(selected_keystone >= 0){
 			show_keystone <- selected_keystone = 1;
 			selected_keystone <- -1.0;
+		}
+		
+		if(selected_legend >= 0){
+			show_legend <- selected_legend = 1;
+			selected_legend <- -1.0;
 		}
 		
 		if(reset_simulation = 1) {
@@ -1399,6 +1406,8 @@ species legend schedules:[]
 		return {nx,ny,po.z};
 	}
 	
+	
+	
 /* 	action draw_legend(string side, int y)
 	{
 		draw (side) at: rotate({8000,y,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
@@ -1411,29 +1420,33 @@ species legend schedules:[]
 //			file images <- file("../includes/6.png");
 		
 //		draw images at:{0,0,3} ;
-			
-		draw rect at: location color: °green;
-		draw rect at: location+offset color: °orange;
-		draw rect at: location+offset+offset color: °red;
 
-		draw("LOW") at: location+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
-		draw("MED") at: location+offset+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
-		draw("HIGH") at: location+offset+offset+textOffset color: first(colorSet).TEXT1 rotate: ANGLE;
-		draw("NOx level") at: location + labelOffset font: font(30) color:first(colorSet).TEXT1 rotate: ANGLE;
+		if(show_legend){
+			draw rect at: location color: °green;
+			draw rect at: location+offset color: °orange;
+			draw rect at: location+offset+offset color: °red;
+
+			draw("LOW") at: location+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
+			draw("MED") at: location+offset+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
+			draw("HIGH") at: location+offset+offset+textOffset color: first(colorSet).TEXT1 rotate: ANGLE;
+			draw("NOx level") at: location + labelOffset font: font(30) color:first(colorSet).TEXT1 rotate: ANGLE;
 		
 		
-		draw ("Gueliz") at: rotate({8000,2000,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
-		draw 5#m around polyline([rotate({8000-50, 2000-23,6}), rotate({6500, 2000-23,6}),{5500,2900,6}])  color: first(colorSet).TEXT1;
-		draw circle(50) at: {5500,2900} color: first(colorSet).TEXT1;
+			draw ("Gueliz") at: rotate({8000,2000,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
+			draw 5#m around polyline([rotate({8000-50, 2000-23,6}), rotate({6500, 2000-23,6}),{5500,2900,6}])  color: first(colorSet).TEXT1;
+			draw circle(50) at: {5500,2900} color: first(colorSet).TEXT1;
 //		ask draw_legend("Gueliz",2000);
 		
-		draw ("Koutoubia") at: rotate({8000,5000,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
-		draw 5#m around polyline([rotate({8000-50, 5000-23,6}), rotate({7300, 5000-23,6}),{6900,4000,6}])  color: first(colorSet).TEXT1;
-		draw circle(50) at: {6900,4000} color: first(colorSet).TEXT1;
+			draw ("Koutoubia") at: rotate({8000,5000,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
+			draw 5#m around polyline([rotate({8000-50, 5000-23,6}), rotate({7300, 5000-23,6}),{6900,4000,6}])  color: first(colorSet).TEXT1;
+			draw circle(50) at: {6900,4000} color: first(colorSet).TEXT1;
 		
-		draw ("UCA") at: rotate({8000,500,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
-		draw 5#m around polyline([rotate({8000-50, 300-23,6}), rotate({7300, 300-23,6}),{4970,1000,6}])  color: first(colorSet).TEXT1;
-		draw circle(50) at: {4970,1000} color: first(colorSet).TEXT1;
+			draw ("UCA") at: rotate({8000,500,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
+			draw 5#m around polyline([rotate({8000-50, 300-23,6}), rotate({7300, 300-23,6}),{4970,1000,6}])  color: first(colorSet).TEXT1;
+			draw circle(50) at: {4970,1000} color: first(colorSet).TEXT1;
+		}
+			
+		
 		
 		
 		/* de cote pour une issue sur le rotate 
