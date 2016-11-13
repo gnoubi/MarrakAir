@@ -67,6 +67,7 @@ global
 	file shape_file_buildings <- file("../includes/SIG_simu/buildings_gama.shp");
 	file shape_file_bound <- file("../includes/keystone_layer.shp");
 	file mydummynetwork <- file("../includes/SIG_demonstrateur/dummy_roads.shp");
+	file medina <- file("../includes/SIG_demonstrateur/medina.shp");
 	file logos <- file("../includes/logos.png");
 		
 	//COMPTAGES ROUTIER
@@ -90,6 +91,7 @@ global
 	
 	graph roads_graph;
 	geometry shape <- envelope(shape_file_bound);
+//	geometry shape_medina <- envelope(medina);
 	
 	road roadToDisplay;
 	int cpt <- 0;		
@@ -302,6 +304,12 @@ global
 		{
 			mycolor <- first(colorSet).AIRPORT;
 		}
+		
+//		create landscape from: medina
+//		{
+//			mycolor <- #red;
+//		}	
+
 		create pollutant_grid from:cell_shape{
 			neighboor_buildings <- building at_distance 70#m;
 			alived_building <- alived_building accumulate(neighboor_buildings); 
@@ -338,8 +346,9 @@ global
 			
 		} //initroad
 		
-		create dummy_road from: mydummynetwork with:[oneway::int(read("oneway")),linkedToRoad::int(read("linkedToRoad"))]
+		create dummy_road from: mydummynetwork with:[oneway::int(read("oneway")),linkToRoad::int(read("linkToRoad"))]
 		{
+			linked_road <- road first_with (each.mid = linkToRoad);
 			aspect_size <- TRAFFIC_LIGHT_SIZES[0];
 			segments_number <- length(shape.points)-1;
 			loop i from: 0 to: segments_number-1{
@@ -353,7 +362,7 @@ global
 		} //initdummyroad
 		
 		create infoDisplay{}
-		create legend{}
+		create legend {}
 		
 		// Génération des Postes de comptage DIGIT correspond au sens de comptage des PM et du sens de digitalisation du réseau routier
 		create carCounter from:PM with:[mid::int(read("Id")), isdigitOriented::bool(read("DIGIT"))]
@@ -445,7 +454,7 @@ species bound schedules:[] {
 		if (show_keystone){
 			draw polygon([{1000,800,-1},{820,5970,-1}, {8930,6320,-1}, {9150,1150,-1}]) color: #black;
 			draw shape color: #red;	
-			//if cycle > 0 {show_keystone <-false;}		
+			if cycle > 0 {show_keystone <-false;}		
 		}
 	}
 }
@@ -752,13 +761,13 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 			 	loop j from:0 to: lights_number-1{
 			 		if oneway = 1{
 			 			
-			 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,100)/100)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,100)/100)/lights_number};
+			 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,10)/10)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,10)/10)/lights_number};
 							draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
 			 		}else{
 			 			
-			 				new_point <- {lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j -  mod(cycle,100)/100)/lights_number, lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j - mod(cycle,100)/100)/lights_number};
+			 				new_point <- {lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j -  mod(cycle,11)/11)/lights_number, lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j - mod(cycle,11)/11)/lights_number};
 							draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
-							new_point <- {-lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j +  mod(cycle,100)/100)/lights_number, -lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j + mod(cycle,100)/100)/lights_number};
+							new_point <- {-lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j +  mod(cycle,11)/11)/lights_number, -lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j + mod(cycle,11)/11)/lights_number};
 							draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
 							
 			 		}
@@ -778,8 +787,10 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 species dummy_road schedules: [] 
 {
 	int oneway;
+	int linkToRoad;
 	float density <- 1.0;
 	float traffic_density <- 8.0;
+	road linked_road;
 	int segments_number ;
 	int aspect_size <-1 ;	
 	list<float> segments_x <- [];
@@ -788,14 +799,12 @@ species dummy_road schedules: []
 	list<point> lane_position_shift <- [];
 
 	aspect car_lights
-	{
-		
+	{	
 		point new_point;
 		int lights_number;
-	//	draw 5#m around shape depth: 0 color:#white  ;
+
 		
-		
-		density <- min([10,traffic_density]);
+		density <- min([10,linked_road.traffic_density]);
 
 	 	loop i from: 0 to: segments_number-1{
 			lights_number <- max([1,int(density * segments_length[i]/150)]);
@@ -930,7 +939,7 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 //			int type_of_vehicule <- flip(percent_of_truck)?2:(flip(percent_of_car)?1:0);
 			int type_of_vehicule <- (flip(percent_of_car)?(flip(percent_of_truck)?2:1):0);
 			
-			write "type of vehi" + type_of_vehicule;
+//			write "type of vehi" + type_of_vehicule;
 				
 		 	if(carBehaviorChoice = "hierarchy")
 		 	{
@@ -1172,7 +1181,7 @@ species car skills: [driving]
 			pollutant <- mres;
 		}
 
-		pollutant_grid  cells <- pollutant_grid first_with(each overlaps self);
+		pollutant_grid  cells <- pollutant_grid first_with(each overlaps self);		
 		
 		if(cells != nil)
 		{
@@ -1393,8 +1402,9 @@ species legend schedules:[]
 	point location <- {8000,6500,1};
 	point offset <- {size.x * cos(ANGLE), size.x * sin(ANGLE)};
 	point textOffset <- {-125,40,2};
-	point tmp <-{- 0.25*size.x,2*size.y}; //{- 0.5*size.x,0.5*size.y};
+	point tmp <-{- 0.25*size.x,2*size.y}; //{- 0.5*size.x,0.5*size.y}; // pour les essais
 	point labelOffset <- {-sin(ANGLE)*tmp.y + tmp.x * cos(ANGLE),cos(ANGLE)*tmp.y + tmp.x * sin(ANGLE),2} ;
+	int dummy_int; 
 		
 	geometry rect <- polygon([{0,0},rotate({size.x,0}),rotate({size.x,size.y}),rotate({0,size.y})]);
 
@@ -1408,42 +1418,63 @@ species legend schedules:[]
 	
 	
 	
-/* 	action draw_legend(string side, int y)
+	int draw_legend(string label, string side, int y_label, point target, int label_offset) // je ne comprends pas pourquoi si je mets action au lieu de int, ca donne des messages d'erreur, si quelqu'un a une idee...
 	{
-		draw (side) at: rotate({8000,y,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
-	//	draw 5#m around polyline([rotate({8000-50, y-23,6}), rotate({6500, y-23,6}),{5500,2900,6}])  color: first(colorSet).TEXT1;
-	//	draw circle(50) at: {5500,2900} color: first(colorSet).TEXT1;
-	}*/
+		switch side {
+			match "left"{
+				draw (label) at: rotate({1000 - 150 -  label_offset,y_label+50,6}) font: font("Helvetica", 18, #plain) color: first(colorSet).TEXT1 rotate: ANGLE;
+				draw 5#m around polyline([rotate({1000, y_label,6}), rotate({target.x - 800, y_label,6}),{target.x,target.y,6}])  color: first(colorSet).TEXT1;
+				draw circle(50) at: {target.x,target.y,6} color: #white;
+				}
+			match "right" {
+				draw (label) at: rotate({9000+150,y_label+50,6}) font: font("Helvetica", 18, #plain) color: first(colorSet).TEXT1 rotate: ANGLE;
+				draw 5#m around polyline([rotate({9000, y_label,6}), rotate({target.x + 800, y_label,6}),{target.x,target.y,6}])  color: first(colorSet).TEXT1;
+				draw circle(50) at: {target.x,target.y,6} color: #white;		
+			}
+		}
+		return 0;
+	}
 	
 
 	aspect base{
-//			file images <- file("../includes/6.png");
-		
+//		file images <- file("../includes/6.png");		
 //		draw images at:{0,0,3} ;
 
-		if(show_legend){
-			draw rect at: location color: °green;
-			draw rect at: location+offset color: °orange;
-			draw rect at: location+offset+offset color: °red;
 
-			draw("LOW") at: location+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
-			draw("MED") at: location+offset+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
-			draw("HIGH") at: location+offset+offset+textOffset color: first(colorSet).TEXT1 rotate: ANGLE;
-			draw("NOx level") at: location + labelOffset font: font(30) color:first(colorSet).TEXT1 rotate: ANGLE;
+			
+		draw rect at: location color: °green;
+		draw rect at: location+offset color: °orange;
+		draw rect at: location+offset+offset color: °red;
+
+		draw("LOW") at: location+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
+		draw("MED") at: location+offset+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
+		draw("HIGH") at: location+offset+offset+textOffset color: first(colorSet).TEXT1 rotate: ANGLE;
+		draw("NOx level") at: location + labelOffset font: font(30) color:first(colorSet).TEXT1 rotate: ANGLE;
+	
+		if(show_legend){
+				
 		
-		
-			draw ("Gueliz") at: rotate({8000,2000,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
-			draw 5#m around polyline([rotate({8000-50, 2000-23,6}), rotate({6500, 2000-23,6}),{5500,2900,6}])  color: first(colorSet).TEXT1;
-			draw circle(50) at: {5500,2900} color: first(colorSet).TEXT1;
-//		ask draw_legend("Gueliz",2000);
-		
-			draw ("Koutoubia") at: rotate({8000,5000,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
-			draw 5#m around polyline([rotate({8000-50, 5000-23,6}), rotate({7300, 5000-23,6}),{6900,4000,6}])  color: first(colorSet).TEXT1;
-			draw circle(50) at: {6900,4000} color: first(colorSet).TEXT1;
-		
-			draw ("UCA") at: rotate({8000,500,2}) font: font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
-			draw 5#m around polyline([rotate({8000-50, 300-23,6}), rotate({7300, 300-23,6}),{4970,1000,6}])  color: first(colorSet).TEXT1;
-			draw circle(50) at: {4970,1000} color: first(colorSet).TEXT1;
+			loop i from: 0 to: length(medina)-1
+			{
+				draw  5#m around medina[i] color: first(colorSet).MEDINA;	//ne marche pas avec around, une idée de la raison ?
+				draw medina[i] color: first(colorSet).MEDINA;	
+			}
+
+
+			dummy_int <- draw_legend("Gueliz","right",2000,{5500,2900},0);
+			dummy_int <- draw_legend("Koutoubia","right",5000,{6900,4000},0);
+			dummy_int <- draw_legend("UCA","right",500,{4970,1000},0);
+			dummy_int <- draw_legend("Airport","left",6500,{4100,6300},500);
+			dummy_int <- draw_legend("Menara","left",4000,{4140,5000},500);
+			draw("Gardens") at: {180,4000+200,6} font: font("Helvetica", 18, #plain) color: first(colorSet).TEXT1 rotate: ANGLE;
+			
+			
+			draw("Medina Walls") at: {8420,4280,6} color:  first(colorSet).MEDINA rotate: -27;	
+			draw("Essaouira road") at: {1000,3240,6} color:  first(colorSet).TEXT1 rotate: 4;	
+			draw("Fes road") at: {8000,1620,6} color:  first(colorSet).TEXT1 rotate: -7;	
+			draw("Ourika road") at: {6410,6400,6} color:  first(colorSet).TEXT1 rotate: 63;	
+			
+
 		}
 			
 		
@@ -1476,6 +1507,8 @@ species colorSet schedules:[]{
 	rgb BUILDING1 <- #green;
 	rgb BUILDING2 <- #orange;
 	rgb BUILDING3 <- #red;
+	rgb MEDINA <- rgb(237,148,99);
+//	rgb ROADS <- rgb(244,226,76);
 		
 //	rgb BACKGROUND <- rgb(250,250,250);
 //	rgb TEXT1 <- rgb(97,186,231);
@@ -1511,7 +1544,7 @@ experiment affect type:gui
 
 
 //		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,8500}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:10 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
-		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:10 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
+		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:1 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
 
 
 		{
