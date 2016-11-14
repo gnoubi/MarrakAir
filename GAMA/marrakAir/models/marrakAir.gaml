@@ -19,7 +19,10 @@ global
 	int MOTORBYKE_ID <- 0;
 	int CAR_ID <- 1;
 	int TRUCK_ID <- 2;
+//	float ANGLE <-2.3;
 	float ANGLE <-2.3;
+	
+	// issue avec des rotations à 180° !! les textes ne se retournent pas
 		
 	int TRAFFIC_LIGHT_DENSITY <- 10;
 	list<int> TRAFFIC_LIGHT_SIZES <- [5,3];
@@ -109,7 +112,7 @@ global
 	bool show_trafic <- true;
 	bool show_pollution <- true;
 	bool show_keystone <- true;
-	bool show_legend <- true;
+	bool show_legend <- false;
 	
 	 
 	map<float,list<list<float>>> readCopertData(string fileName)
@@ -1404,9 +1407,9 @@ species legend schedules:[]
 	point size <- {500,200};
 	point location <- {8000,6500,1};
 	point offset <- {size.x * cos(ANGLE), size.x * sin(ANGLE)};
-	point textOffset <- {-125,40,2};
-	point tmp <-{- 0.25*size.x,2*size.y}; //{- 0.5*size.x,0.5*size.y}; // pour les essais
-	point labelOffset <- {-sin(ANGLE)*tmp.y + tmp.x * cos(ANGLE),cos(ANGLE)*tmp.y + tmp.x * sin(ANGLE),2} ;
+	point textOffset <- {-145,40,2};
+	point auxOffset <-{- 0.25*size.x ,2*size.y}; //{- 0.5*size.x,0.5*size.y}; // pour les essais
+	point labelOffset <- {-sin(ANGLE)*auxOffset.y + auxOffset.x * cos(ANGLE),cos(ANGLE)*auxOffset.y + auxOffset.x * sin(ANGLE),2} ;
 	int dummy_int; 
 		
 	geometry rect <- polygon([{0,0},rotate({size.x,0}),rotate({size.x,size.y}),rotate({0,size.y})]);
@@ -1450,11 +1453,16 @@ species legend schedules:[]
 		draw rect at: location+offset color: °orange;
 		draw rect at: location+offset+offset color: °red;
 
-		draw("LOW") at: location+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
-		draw("MED") at: location+offset+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
-		draw("HIGH") at: location+offset+offset+textOffset color: first(colorSet).TEXT1 rotate: ANGLE;
-		draw("NOx level") at: location + labelOffset font: font(30) color:first(colorSet).TEXT1 rotate: ANGLE;
-	
+//		draw("LOW") at: location+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
+//		draw("MED") at: location+offset+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
+//		draw("HIGH") at: location+offset+offset+textOffset color: first(colorSet).TEXT1 rotate: ANGLE;
+//		draw("NOx level") at: location + labelOffset font: font(30) color:first(colorSet).TEXT1 rotate: ANGLE;
+		
+		//réglages pour le serveur de Nico
+		draw("LOW") at: location+textOffset font:font(20) color:first(colorSet).TEXT1 rotate: ANGLE;
+		draw("MED") at: location+offset+textOffset font:font(20) color:first(colorSet).TEXT1 rotate: ANGLE;
+		draw("HIGH") at: location+offset+offset+textOffset font:font(20) color: first(colorSet).TEXT1 rotate: ANGLE;
+		draw("NOx level") at: location + labelOffset font: font(42) color:first(colorSet).TEXT1 rotate: ANGLE;	
 		if(show_legend){
 				
 		
@@ -1550,7 +1558,12 @@ experiment affect type:gui
 
 
 //		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,8500}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
-		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:1 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
+
+// reglage serveur Nico
+		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,9000}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
+
+
+//		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:1 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
 
 
 		{
