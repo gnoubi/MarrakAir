@@ -724,7 +724,10 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 	
 	aspect base
 	{
-		draw 5#m around shape depth: 0 color:#white  ;
+		rgb tmp <- #green;
+		if traffic_density > 5 {tmp <- #orange;}
+		if traffic_density > 10 {tmp <- #red;}		
+		draw 5#m around shape depth: 0 color: tmp  ;
 	}
 	aspect base3D
 	{	
@@ -1440,6 +1443,7 @@ species legend schedules:[]
 //		file images <- file("../includes/6.png");		
 //		draw images at:{0,0,3} ;
 
+		draw logos at: {2100,6500,10} size:{4000,600};
 
 			
 		draw rect at: location color: °green;
@@ -1464,7 +1468,8 @@ species legend schedules:[]
 			dummy_int <- draw_legend("Gueliz","right",2000,{5500,2900},0);
 			dummy_int <- draw_legend("Koutoubia","right",5000,{6900,4000},0);
 			dummy_int <- draw_legend("UCA","right",500,{4970,1000},0);
-			dummy_int <- draw_legend("Airport","left",6500,{4100,6300},500);
+			//dummy_int <- draw_legend("Airport","left",6500,{4100,6300},500);
+			dummy_int <- draw_legend("Airport","left",5500,{4100,6300},500);
 			dummy_int <- draw_legend("Menara","left",4000,{4140,5000},500);
 			draw("Gardens") at: {180,4000+200,6} font: font("Helvetica", 18, #plain) color: first(colorSet).TEXT1 rotate: ANGLE;
 			
@@ -1498,6 +1503,7 @@ species legend schedules:[]
 // espece temporaire, juste pour modifier plus facilement les couleurs et switcher entre différents jeux de couleur. Je ferai un truc plus propre plus tard
 species colorSet schedules:[]{	
 	rgb BACKGROUND <- rgb(10,10,10);
+	//rgb BACKGROUND <- #white;
 	rgb TEXT1 <- #white;
 	rgb LIGHTS <- #white;
 	rgb TEXT2 <- #white;
@@ -1543,7 +1549,7 @@ experiment affect type:gui
 	output {
 
 
-//		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,8500}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:10 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
+//		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,8500}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
 		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:1 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
 
 
@@ -1551,7 +1557,7 @@ experiment affect type:gui
 			//grid parcArea;
 			species bound aspect: base;
 		//	species pollutant_grid aspect:nox_aspect ;
-			species road aspect:car_lights;
+			species road aspect: car_lights;
 			species dummy_road aspect:car_lights;
 			species building aspect:base; // transparency:0.5;
 			species landscape aspect:base;
