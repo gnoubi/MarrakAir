@@ -145,7 +145,7 @@ public final class MQTTConnector {
 			connOpts.setCleanSession(true);
 			sendConnection.setCallback(new Callback());
 		    connOpts.setCleanSession(true);
-		    connOpts.setKeepAliveInterval(30);
+		    connOpts.setKeepAliveInterval(3600);
 		    connOpts.setUserName(this.LOGIN);
 		    connOpts.setPassword(this.PASSWORD.toCharArray());
 		  	sendConnection.connect(connOpts);

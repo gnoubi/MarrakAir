@@ -1,5 +1,4 @@
 .root {
--fx-pref-width:600px;
--fx-pref-height: 500px;
+-fx-padding: 10px;
 -fx-font-size: 10px;
 }
