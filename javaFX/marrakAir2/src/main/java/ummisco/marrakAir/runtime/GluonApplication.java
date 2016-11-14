@@ -65,6 +65,7 @@ public class GluonApplication extends MobileApplication {
 				return (View) new SecondaryView().getView();
 			}
 		};
+		
 		addViewFactory(PRIMARY_VIEW, v1);
 		addViewFactory(SECONDARY_VIEW, v2);
 		final NavigationDrawer drawer = new NavigationDrawer();

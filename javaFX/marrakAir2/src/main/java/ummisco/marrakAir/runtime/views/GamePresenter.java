@@ -265,7 +265,7 @@ public class GamePresenter {
 		this.image.setImage(new Image(GluonApplication.class.getResourceAsStream("/logos.PNG")));
 		this.image.setSmooth(true);
         this.image.setCache(true);
-		this.image.setFitWidth(450);
+		this.image.setFitWidth(768);
 		this.image.setPreserveRatio(true);
 
 
