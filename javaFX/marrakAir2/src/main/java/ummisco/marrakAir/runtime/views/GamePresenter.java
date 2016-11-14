@@ -248,11 +248,11 @@ public class GamePresenter {
 	{
 		if(connection!=null&&!connection.isConnected()){
 			System.out.println("doing something");
-			this.vehicleEnergy.registerConnection(connection);
-			this.vehicleType.registerConnection(connection);
+			//this.vehicleEnergy.registerConnection(connection);
+			//this.vehicleType.registerConnection(connection);
 			//this.pollutantGraph.registerConnection(connection);
 			//this.particulExposition.registerConnection(connection);
-			this.vehicleAge.registerConnection(connection);
+			//this.vehicleAge.registerConnection(connection);
 			//this.CO2Production.registerConnection(connection);
 		}
 	}
