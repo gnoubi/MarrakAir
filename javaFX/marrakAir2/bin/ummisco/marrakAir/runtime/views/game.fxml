@@ -23,7 +23,7 @@
 	<center>
 		<VBox alignment="CENTER">
 			<children>
-				<HBox prefHeight="200.0">
+				<!-- <HBox prefHeight="200.0">
 					<PieChartBox fx:id="vehicleEnergy" title="Energy"
 						follow="energy"
 						specifyDraw="gasoline_population::gasoline::20,diesel_population::Diesel::80" />
@@ -33,7 +33,7 @@
 						follow="typeVehicle"
 						specifyDraw="car_population::Car::40,truck_population::Truck::30,motorbike_population::Motorbike::30" />
 				</HBox>
-				<!-- <HBox>
+				<HBox>
 					<LineChartBox fx:id="pollutantGraph" follow="pollutantGraph"
 						plots="my_date::pollution_nox_intanstanee::production instantanée d'Oxyde 
 					d'azote">
@@ -72,14 +72,14 @@
 						</yAxis>
 					</LineChartBox>
 				</HBox> -->
-				<Separator />
+				<!-- <Separator /> -->
 				<VBox>
 
 
 					<padding>
 						<Insets bottom="25" />
 					</padding>
-					<HBox alignment="CENTER" spacing="20" prefWidth="800">
+					<HBox alignment="CENTER" spacing="20" prefWidth="800" prefHeight="400">
 						<SliderBox label="Gasoline/Diesel vehicles(%)"
 							agentName="User" agentAttribute="slide_energy" vertical="true"
 							minWidth="100" prefWidth="150.0" onValueChanged="#valueChanged" />
@@ -108,11 +108,11 @@
 								<graphic />
 
 							</Button>
-							<Button fx:id="helpB" mnemonicParsing="false" prefWidth="230"
+							<!-- <Button fx:id="helpB" mnemonicParsing="false" prefWidth="230"
 								text="Help?" onAction="#HelpButtonPressed">
 								<graphic />
 
-							</Button>
+							</Button> -->
 
 						</children>
 					</HBox>

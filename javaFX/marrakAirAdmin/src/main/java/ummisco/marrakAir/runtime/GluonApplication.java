@@ -135,7 +135,7 @@ public class GluonApplication extends MobileApplication {
 	        controller.startHousekeeping(); 
 	    }*/
 		
-		Platform.exit();
-		System.exit(0);
+		/*Platform.exit();
+		System.exit(0);*/
 	}
 }
