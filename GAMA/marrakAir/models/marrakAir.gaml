@@ -26,13 +26,17 @@ global
 		
 	int TRAFFIC_LIGHT_DENSITY <- 10;
 	list<int> TRAFFIC_LIGHT_SIZES <- [9,6];//[5,3];
-	int DENSITY_COEF <- 200;
+	int DENSITY_COEF <- 300;
 	
 	
 	float MOTORBYKE_COEF <- 2;
 	float CAR_COEF <- 1;
 	float TRUCK_COEF <- 1;
 	
+	point KEYSTONE_HAUT_GAUCHE <- {0 ,0};
+	point KEYSTONE_HAUT_DROITE <- {1 ,0};
+	point KEYSTONE_BAS_GAUCHE <- {0 ,1};
+	point KEYSTONE_BAS_DROITE <- {1 ,1};
 	
 	
 	// Pas-de-temps à modifier en fonction de la taille du réseau
@@ -1580,29 +1584,29 @@ species legend schedules:[]
 			float rect2 <-  1500 -  rect1 ; 
 			
 			point pos <- {600,4000};
-			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: rgb(106, 173,255);
-			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: rgb(183, 216,255);
-			draw("Gasoline") at: pos+rotate({-150,280}) font: font(18) color:  rgb(106, 173,255) rotate: ANGLE;	 
-			draw("Diesel") at: pos+rotate({1010,280}) font: font(18) color: rgb(183, 216,255) rotate: ANGLE;	
+			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
+			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: first(colorSet).BAR2;
+			draw("Gasoline") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
+			draw("Diesel") at: pos+rotate({1010,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
 			
 
 			rect1 <- vehicle_2020_norm_rate*1500 ;
 			rect2 <- 1500 - rect1 ;			
 			
 			pos <- {600,4400};
-			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: rgb(106, 173,255);
-			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: rgb(183, 216,255);
-			draw("2007") at: pos+rotate({-150,280}) font: font(18) color:  rgb(106, 173,255) rotate: ANGLE;	 
-			draw("Innovative") at: pos+rotate({800,280}) font: font(18) color: rgb(183, 216,255) rotate: ANGLE;	
+			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
+			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: first(colorSet).BAR2;
+			draw("2007") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
+			draw("Innovative") at: pos+rotate({800-30,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
 			
 			rect1 <- percent_of_car*1500 ;
 			rect2 <- 1500 - rect1 ;
 			
 			pos <- {600,4800};
-			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: rgb(106, 173,255);
-			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: rgb(183, 216,255);
-			draw("Cars") at: pos+rotate({-150,280}) font: font(18) color:  rgb(106, 173,255) rotate: ANGLE;	 
-			draw("Motorbikes") at: pos+rotate({740,280}) font: font(18) color: rgb(183, 216,255) rotate: ANGLE;	
+			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
+			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: first(colorSet).BAR2;
+			draw("Cars") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
+			draw("Motorbikes") at: pos+rotate({740-30,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
 		}
 			
 		
@@ -1637,6 +1641,8 @@ species colorSet schedules:[]{
 	rgb BUILDING2 <- #orange;
 	rgb BUILDING3 <- #red;
 	rgb MEDINA <- rgb(237,148,99);
+	rgb BAR1 <- rgb(0,106,213);
+	rgb BAR2 <- rgb(183, 216,255);
 //	rgb ROADS <- rgb(244,226,76);
 		
 //	rgb BACKGROUND <- rgb(250,250,250);
@@ -1675,7 +1681,8 @@ experiment affect type:gui
 //		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,8500}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
 
 // reglage serveur Nico
-		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,9000}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
+//		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,9000}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
+		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,9000}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: [KEYSTONE_HAUT_GAUCHE,KEYSTONE_HAUT_DROITE,KEYSTONE_BAS_GAUCHE,KEYSTONE_BAS_DROITE]  
 
 
 //		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
