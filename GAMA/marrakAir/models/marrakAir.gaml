@@ -25,7 +25,8 @@ global
 	// issue avec des rotations à 180° !! les textes ne se retournent pas
 		
 	int TRAFFIC_LIGHT_DENSITY <- 10;
-	list<int> TRAFFIC_LIGHT_SIZES <- [5,3];
+	list<int> TRAFFIC_LIGHT_SIZES <- [9,6];//[5,3];
+	int DENSITY_COEF <- 200;
 	
 	
 	float MOTORBYKE_COEF <- 2;
@@ -83,8 +84,8 @@ global
 	
 	//Matrices de COPERT
 	map<string,map<float,list<list<float>>>> copert;
-	map<string,map<float,list<list<float>>>> copert07;
-	map<string,map<float,list<list<float>>>> copert20;
+//	map<string,map<float,list<list<float>>>> copert07;
+//	map<string,map<float,list<list<float>>>> copert20;
 	float energy <- 0.5;
 	float vehicle_2020_norm_rate <- 0.5 ;
 	list<building> alived_building;
@@ -102,8 +103,9 @@ global
 	
 	int nbCycleInPeriod <- int(capturePeriod / stepDuration);
 	float maxNox <- 2500; //1.0 update: max(pollutant_grid collect(each.pollutant[world.pollutentIndex("nox")]));
-	float maxNox_buildings <- 5; //0000 ;   //1.0 update: 10000; //max(building collect(each.pollutant[world.pollutentIndex("nox")]));
-	float diffusion_rate <- 0.5;
+	float maxNox_buildings <- 2.8;//5; //0000 ;   //1.0 update: 10000; //max(building collect(each.pollutant[world.pollutentIndex("nox")]));
+//	float diffusion_rate <- 0.5;  // modif alived
+	float diffusion_rate <- 0.002;
 	
 	float max_speed <-  70#km/#h;
 	float percent_of_car <- 0.7; //1 equal 100% cars...
@@ -114,6 +116,8 @@ global
 	bool show_keystone <- true;
 	bool show_legend <- false;
 	
+	int last_reset <- 0; // cycle au cours duquel a eu le dernier reset
+	float last_reset_time <- 0#h;
 	 
 	map<float,list<list<float>>> readCopertData(string fileName)
 	{
@@ -182,6 +186,8 @@ global
 		return res;
 	}
 	
+
+	
 	init
 	{
 		do initialize();
@@ -247,10 +253,30 @@ global
 		{
 			do die;
 		}
+		ask dummy_road
+		{
+			do die;
+		}
 		ask traffic_light
 		{
 			do die;
 		}
+		
+		ask infoDisplay
+		{
+			do die;
+		}
+		ask legend
+		{
+			do die;
+		}
+		ask colorSet
+		{
+			do die;
+		}
+		
+		last_reset <- cycle;
+		
 		
 		do initialize();
 		
@@ -315,9 +341,9 @@ global
 
 		create pollutant_grid from:cell_shape{
 			neighboor_buildings <- building at_distance 70#m;
-			alived_building <- alived_building accumulate(neighboor_buildings); 
+//			alived_building <- alived_building accumulate(neighboor_buildings);   // modif alived
+			alived_building <- alived_building union neighboor_buildings;
 		}
-		
 		
 		
 		create bound from: shape_file_bound;
@@ -364,7 +390,39 @@ global
 			}
 		} //initdummyroad
 		
-		create infoDisplay{}
+		create infoDisplay  {
+			location <- {600,1500};//{600,2500};
+			float nx <- cos(ANGLE) * location.x - sin(ANGLE) * location.y;
+			float ny <- sin(ANGLE) * location.x + cos(ANGLE) * location.y;
+			location <- {nx, ny};
+			pollutant_type <- "co2";
+			label <- "CO2";
+			dimensions <- {2500,1000};//{2500,1500};
+			ymax <- 1400;
+		}
+		
+		create infoDisplay  {
+			location <- {600,3000};
+			float nx <- cos(ANGLE) * location.x - sin(ANGLE) * location.y;
+			float ny <- sin(ANGLE) * location.x + cos(ANGLE) * location.y;
+			location <- {nx, ny};
+			pollutant_type <- "pm";
+			label <- "PM";
+			dimensions <- {2500,1000};
+			ymax <- 70;
+		}
+		
+//		create infoDisplay  {
+//			location <- {600,4500};
+//			float nx <- cos(ANGLE) * location.x - sin(ANGLE) * location.y;
+//			float ny <- sin(ANGLE) * location.x + cos(ANGLE) * location.y;
+//			location <- {nx, ny};
+//			pollutant_type <- "nox";
+//			label <- "NOx";
+//			dimensions <- {2500,1000};
+//			ymax <- 70;
+//		}
+		
 		create legend {}
 		
 		// Génération des Postes de comptage DIGIT correspond au sens de comptage des PM et du sens de digitalisation du réseau routier
@@ -434,6 +492,11 @@ global
 		
 	} //init 
 	
+	
+
+	
+
+	
 	reflex suivi when:false
 	{
 		write " TimeMachine " + (cycle)+ "--"+(cycle/60)+"h" ;
@@ -442,7 +505,9 @@ global
 	// Définition de la fin de la simulation 24h + 1sec pour obtenir le dernier 1/4h
 	reflex stop_sim when:  time >= 24#h+1#sec
 	{
-		do halt;
+		last_reset_time <- time;
+		do reset;
+		//do halt;
 	} 
 } //global
 
@@ -719,7 +784,7 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 		sumTraffic <- sumTraffic + traffic;
 		lastTraffic <- traffic;
 		traffic <- 0;
-		meanTraffic <- sumTraffic / int(time / capturePeriod );
+		meanTraffic <- sumTraffic / int(time / capturePeriod);
 	}
 	
 
@@ -763,11 +828,11 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 //		 		}
 		 		
 		 		
-				lights_number <- max([1,int(density * segments_length[i]/150)]);
+				lights_number <- max([1,int(density * segments_length[i]/DENSITY_COEF)]);
 			 	loop j from:0 to: lights_number-1{
 			 		if oneway = 1{
 			 			
-			 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,10)/10)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,10)/10)/lights_number};
+			 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,40)/40)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,40)/40)/lights_number};
 							draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
 			 		}else{
 			 			
@@ -813,11 +878,11 @@ species dummy_road schedules: []
 		density <- min([10,linked_road.traffic_density]);
 
 	 	loop i from: 0 to: segments_number-1{
-			lights_number <- max([1,int(density * segments_length[i]/150)]);
+			lights_number <- max([1,int(density * segments_length[i]/DENSITY_COEF)]);
 		 	loop j from:0 to: lights_number-1{
 		 		if oneway = 1{
 		 			
-		 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,100)/100)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,100)/100)/lights_number};
+		 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,40)/40)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,40)/40)/lights_number};
 						draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
 		 		}else{
 		 			
@@ -1291,7 +1356,7 @@ species building schedules: alived_building {
 				remove index:0 from:	cList;
 								
 			}
-			pollutant_history[i] <- cList + cloud[i];
+			pollutant_history[i] <- cList + cloud[i]; //attention, à modifier, car si n voitures polluent le même bâtiment, on décale dans le meme cycle polluant_history de n
 			
 		}
 	}	
@@ -1307,8 +1372,27 @@ species building schedules: alived_building {
 		if(show_pollution)
 		{
 			float rate <- pollutant[world.pollutentIndex("pm")]/maxNox_buildings;
+			rgb mcol;// <- ((maxNox_buildings/3)>rate)?first(colorSet).BUILDING1 : (maxNox_buildings<rate?first(colorSet).BUILDING3:first(colorSet).BUILDING2);
+			float threshold <-1* maxNox_buildings/5;
+			if rate < threshold
+			{
+				mcol <- rgb(255*rate/threshold,136+40*rate/threshold,0);
+			}else{
+				mcol <- rgb(255,175-175*rate/(maxNox_buildings-threshold),0);
+			}
 			
-			rgb mcol <- ((maxNox_buildings/2)>rate)?first(colorSet).BUILDING1 : (maxNox_buildings<rate?first(colorSet).BUILDING3:first(colorSet).BUILDING2);
+//					{
+//				mcol <- rgb(255*sqrt(rate)*sqrt(2/maxNox_buildings),136+40*sqrt(rate)*sqrt(2/maxNox_buildings),0);
+//			}else{
+//				mcol <- rgb(255,175-175*sqrt(rate*2/maxNox_buildings),0);
+//			}
+			
+//				{
+//				mcol <- rgb(255*rate*2/maxNox_buildings,136+40*rate*2/maxNox_buildings,0);
+//			}else{
+//				mcol <- rgb(255,175-175*rate*2/maxNox_buildings,0);
+//			}
+			
 			draw shape color: mcol depth: 0 at: location +{0,0,5};
 			//draw shape color: mcol depth: 0 ;
 		//	draw shape color: rgb(255,int((1-pollutant[world.pollutentIndex("nox")]/maxNox_buildings)*255),255) depth: height;
@@ -1323,22 +1407,21 @@ species building schedules: alived_building {
 
 species infoDisplay {
 
-	point location <- {800,2500};
+	//point location <- {800,2500};
 	
 	float cx <- cos(ANGLE);
 	float sx <- sin(ANGLE);
+	string pollutant_type;
+	string label;
 		
-	point dimensions <- {2500,1500};
-	float dx;
-	float ymax <- 1400;
+	point dimensions;// <- {2500,1500};
+	float dx; 
+	float ymax;// <- 1400;
 	int labelOffset <- 200;
 	
-	list<float> infoList <-[0.0]; 
-	
-	
+//	list<float> infoList <-[0.0];
+	list<float> infoList <- list_with(200,0.0); 
 	float info;
-	
-	
 	
 	point pos(point po)
 	{
@@ -1351,49 +1434,49 @@ species infoDisplay {
 	{
 		int hh <- int(t / 3600);
 		int mm <- int(t / 60) - 60 * hh;
-		int ss <- int(t - 60 * mm - 3600 * hh);
-		
+		int ss <- int(t - 60 * mm - 3600 * hh);		
 		return (hh< 10? " ":"")+string(hh) + (mm< 10? "h  ":"h ") + string(mm) + (ss< 10? "mn  ":"mn ") +string(ss)+"s";
 	}
 	
 	
 	aspect base{
-		
-	 	//	write(info);
-	
-		// info <- mean (road collect each.traffic_density);
-		if building != nil{
-		info <- mean(list(building collect(mean(each.pollutant_history[world.pollutentIndex("co")]))))/stepDuration*3600;
-		
-		add info to: infoList;
-		if info> ymax   
+
+
+		if building != nil
+		{
+			info <- mean(list(building collect(mean(each.pollutant_history[world.pollutentIndex(pollutant_type)]))))/stepDuration*3600;
+			add info to: infoList;
+			if info> ymax   
 			{
 				ymax <- info;
 			}
+			//if length(infoList) > 200{
+				remove index:0 from:infoList;
+			//}
 			
 		}
 	
-	//	remove index:0 from: infoList; 
 	
 		float maxInfoList <- max([0.1,max(infoList)]);
-		int digits <- cycle = 0 ? 0: int(log(cycle));
+	//	int digits <- cycle = 0 ? 0: int(log(cycle));
 		
-		if length(infoList) > 1
-		{
+//		if length(infoList) > 1
+//		{
+
 		dx <- dimensions.x / (length(infoList)-1);
-			loop i from:0 to: length(infoList)-2{
-				draw polygon([pos({i*dx,-dimensions.y*infoList[i]/ymax}),pos({(i+1)*dx,-dimensions.y*infoList[i+1]/ymax}),pos({(i+1)*dx,0}),pos({i*dx,0})]) color: first(colorSet).CURVES; 
-			}
+		loop i from:0 to: length(infoList)-2{
+			draw polygon([pos({i*dx,-dimensions.y*infoList[i]/ymax}),pos({(i+1)*dx,-dimensions.y*infoList[i+1]/ymax}),pos({(i+1)*dx,0}),pos({i*dx,0})]) color: first(colorSet).CURVES; 
 		}
+//		}
 
 		draw 5#m around (line([pos({- 200, - dimensions.y*maxInfoList/ymax}),pos({dimensions.x, - dimensions.y*maxInfoList/ymax})])) color: first(colorSet).TEXT2;
 		draw(string(int(maxInfoList))+" g per hour") font: font(20) color: first(colorSet).TEXT2 at: pos({ 20, - dimensions.y * maxInfoList/ymax - 25}) rotate: ANGLE;
 		draw 5#m around line([pos({- 200,5}),pos({dimensions.x,5})]) color: first(colorSet).TEXT2;
 		draw("0") color: first(colorSet).TEXT2 font: font(20) at: pos({20, 190}) rotate: ANGLE;
 		draw 5#m around line([pos({0, 200}),pos({0, - dimensions.y * maxInfoList/ymax - 200})]) color: first(colorSet).TEXT2;
-		draw("NOx") font: font(20) at: pos({- 50, - dimensions.y * maxInfoList /ymax /2 + labelOffset}) color: first(colorSet).TEXT2 rotate: -90+ANGLE;
+		draw(label) font: font(20) at: pos({- 50, - dimensions.y * maxInfoList /ymax /2 + labelOffset}) color: first(colorSet).TEXT2 rotate: -90+ANGLE;
 	//	draw("Time "+string(cycle)) font: font(20) at:  pos({dimensions.x - 650 - digits*80, 190}) color: °white rotate: ANGLE; 
-		draw(as_time(cycle*5)) font: font(20) at:  pos({dimensions.x - 900, 190}) color: first(colorSet).TEXT2 rotate: ANGLE; 
+		draw(as_time((cycle-last_reset)*5)) font: font(20) at:  pos({dimensions.x - 900, 190}) color: first(colorSet).TEXT2 rotate: ANGLE; 
 	
 	}
 	
@@ -1446,23 +1529,23 @@ species legend schedules:[]
 //		file images <- file("../includes/6.png");		
 //		draw images at:{0,0,3} ;
 
-		draw logos at: {2100,6500,10} size:{4000,600};
+		draw logos at: {2100,6500,5} size:{4000,600};
 
 			
 		draw rect at: location color: °green;
 		draw rect at: location+offset color: °orange;
 		draw rect at: location+offset+offset color: °red;
 
-//		draw("LOW") at: location+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
-//		draw("MED") at: location+offset+textOffset color:first(colorSet).TEXT1 rotate: ANGLE;
-//		draw("HIGH") at: location+offset+offset+textOffset color: first(colorSet).TEXT1 rotate: ANGLE;
-//		draw("NOx level") at: location + labelOffset font: font(30) color:first(colorSet).TEXT1 rotate: ANGLE;
-		
+//		draw("LOW") at: location+textOffset font:font(20) color:first(colorSet).TEXT1 rotate: ANGLE;
+//		draw("MED") at: location+offset+textOffset font:font(20) color:first(colorSet).TEXT1 rotate: ANGLE;
+//		draw("HIGH") at: location+offset+offset+textOffset font:font(20) color: first(colorSet).TEXT1 rotate: ANGLE;
+//		draw("NOx level") at: location + labelOffset font: font(42) color:first(colorSet).TEXT1 rotate: ANGLE;	
+//		
 		//réglages pour le serveur de Nico
-		draw("LOW") at: location+textOffset font:font(20) color:first(colorSet).TEXT1 rotate: ANGLE;
-		draw("MED") at: location+offset+textOffset font:font(20) color:first(colorSet).TEXT1 rotate: ANGLE;
-		draw("HIGH") at: location+offset+offset+textOffset font:font(20) color: first(colorSet).TEXT1 rotate: ANGLE;
-		draw("NOx level") at: location + labelOffset font: font(42) color:first(colorSet).TEXT1 rotate: ANGLE;	
+		draw("LOW") at: location+textOffset font:font(18) color:first(colorSet).TEXT1 rotate: ANGLE;
+		draw("MED") at: location+offset+textOffset font:font(18) color:first(colorSet).TEXT1 rotate: ANGLE;
+		draw("HIGH") at: location+offset+offset+textOffset font:font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
+		draw("PM level") at: location + labelOffset font: font(35) color:first(colorSet).TEXT1 rotate: ANGLE;	
 		if(show_legend){
 				
 		
@@ -1488,6 +1571,38 @@ species legend schedules:[]
 			draw("Ourika road") at: {6410,6400,6} color:  first(colorSet).TEXT1 rotate: 63;	
 			
 
+			 
+ 
+			 
+			 
+		}else{
+			float rect1 <- energy*1500;
+			float rect2 <-  1500 -  rect1 ; 
+			
+			point pos <- {600,4000};
+			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: rgb(106, 173,255);
+			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: rgb(183, 216,255);
+			draw("Gasoline") at: pos+rotate({-150,280}) font: font(18) color:  rgb(106, 173,255) rotate: ANGLE;	 
+			draw("Diesel") at: pos+rotate({1010,280}) font: font(18) color: rgb(183, 216,255) rotate: ANGLE;	
+			
+
+			rect1 <- vehicle_2020_norm_rate*1500 ;
+			rect2 <- 1500 - rect1 ;			
+			
+			pos <- {600,4400};
+			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: rgb(106, 173,255);
+			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: rgb(183, 216,255);
+			draw("2007") at: pos+rotate({-150,280}) font: font(18) color:  rgb(106, 173,255) rotate: ANGLE;	 
+			draw("Innovative") at: pos+rotate({800,280}) font: font(18) color: rgb(183, 216,255) rotate: ANGLE;	
+			
+			rect1 <- percent_of_car*1500 ;
+			rect2 <- 1500 - rect1 ;
+			
+			pos <- {600,4800};
+			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: rgb(106, 173,255);
+			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: rgb(183, 216,255);
+			draw("Cars") at: pos+rotate({-150,280}) font: font(18) color:  rgb(106, 173,255) rotate: ANGLE;	 
+			draw("Motorbikes") at: pos+rotate({740,280}) font: font(18) color: rgb(183, 216,255) rotate: ANGLE;	
 		}
 			
 		
@@ -1563,7 +1678,7 @@ experiment affect type:gui
 		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,9000}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
 
 
-//		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:1 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
+//		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
 
 
 		{
