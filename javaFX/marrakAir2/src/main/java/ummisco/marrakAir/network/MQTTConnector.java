@@ -2,6 +2,7 @@ package ummisco.marrakAir.network;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,22 +33,30 @@ public final class MQTTConnector {
 	public static String DEFAULT_PASSWORD = "password";
 	public static String DEFAULT_HOST =  "localhost";
 	public static String DEFAULT_PORT =  "1883";
-	
+	public Date date;
+	public static final long maxTime = 1000;
+	public ArrayList<String> prevTopic = new ArrayList<String>();
+
+
 	protected MqttClient sendConnection = null;
 	Map<String, ArrayList<FollowedVariable>> receivedData ;
-	
+
 	public MQTTConnector(String server, String port,  String userName, String password) throws MqttException
 	{	
 		this.SERVER_URL  = (server==null?DEFAULT_HOST:server);
 		this.SERVER_PORT = (port==null?DEFAULT_PORT:port);
 		this.LOGIN = (userName==null?DEFAULT_USER:userName);
 		this.PASSWORD =(password==null?DEFAULT_PASSWORD:userName);
+		date = new Date();
+		date.setTime(date.getTime() - maxTime);
 		this.connectToServer();
 		receivedData = new HashMap<String, ArrayList<FollowedVariable>>();
 	}
-	
+
 	class Callback implements MqttCallback
 	{
+
+
 		@Override
 		public void connectionLost(Throwable arg0)  {
 			//throw new MqttException(arg0);
@@ -60,11 +69,14 @@ public final class MQTTConnector {
 		@Override
 		public void messageArrived(String topic, MqttMessage message) throws Exception {
 			String body = message.toString();
+
+
 			storeData(topic,body);
+
 		}
 	}
-	
-/*	public List<Map<String,Object>>  getLastData(String topic)
+
+	/*	public List<Map<String,Object>>  getLastData(String topic)
 	{
 		//Object  data = storeDataS(topic,null);
 		FollowedVariable tmp=this.receivedData.get(topic);
@@ -72,31 +84,43 @@ public final class MQTTConnector {
 			return null;
 		return tmp.popLastData();
 	}
-*/	
-	
+	 */	
+
 	private final void storeData(String topic, String message)
 	{
-		//AbstractDriver
-		System.out.println("message received "+ topic);
-		XStream dataStreamer = new XStream(new DomDriver() );// DomDriver());
-		@SuppressWarnings("unchecked")
-		Map<String, Object> data = (Map<String, Object>)dataStreamer.fromXML(message);
-		ArrayList<FollowedVariable> dts=this.receivedData.get(topic);
-		System.out.println("message received "+ topic+" "+data);
-		
-		if(dts==null)
-			{
-				//dts = new FollowedVariable(topic);
-				//this.receivedData.put(topic,dts);
-				return;
+		Date currDate= new Date();
+		if(currDate.getTime() - date.getTime() >= maxTime){
+				if(!prevTopic.contains(topic)){
+					//AbstractDriver
+					System.out.println("message received "+ topic);
+					XStream dataStreamer = new XStream(new DomDriver() );// DomDriver());
+					@SuppressWarnings("unchecked")
+					Map<String, Object> data = (Map<String, Object>)dataStreamer.fromXML(message);
+					ArrayList<FollowedVariable> dts=this.receivedData.get(topic);
+					System.out.println("message received "+ topic+" "+data);
+
+					if(dts==null)
+					{
+						//dts = new FollowedVariable(topic);
+						//this.receivedData.put(topic,dts);
+
+						return;
+					}
+					for(FollowedVariable dt:dts)
+						dt.pushNewData(data);
+					prevTopic.add(topic);
+				}else{
+					date = new Date();
+					prevTopic.clear();
+				}
+			}else{
+				System.out.println("not Yet");
 			}
-		for(FollowedVariable dt:dts)
-			dt.pushNewData(data);
 	}
 
 	public final void releaseConnection() throws MqttException{
-			sendConnection.disconnect();
-			sendConnection = null;
+		sendConnection.disconnect();
+		sendConnection = null;
 	}
 
 	public void registerVariable(FollowedVariable var)
@@ -115,45 +139,45 @@ public final class MQTTConnector {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public final void sendMessage(String dest, Object data ) throws MqttException
 	{
 		XStream dataStreamer = new XStream(new DomDriver());
 		String dataS = dataStreamer.toXML(data);
 		this.sendFormatedMessage(dest, dataS);
 	}
-	
+
 	private final void sendFormatedMessage( String receiver, String content) throws MqttException {
-			MqttMessage mm = new MqttMessage(content.getBytes());
-			sendConnection.publish(receiver, mm);
+		MqttMessage mm = new MqttMessage(content.getBytes());
+		sendConnection.publish(receiver, mm);
 	}
 
 	public void subscribeToGroup(String boxName)  throws MqttException {
-			sendConnection.subscribe(boxName);
+		sendConnection.subscribe(boxName);
 	}
-	
+
 	public void unsubscribeGroup(String boxName) throws MqttException   {
-			sendConnection.unsubscribe(boxName);
-		}
+		sendConnection.unsubscribe(boxName);
+	}
 
 	protected void connectToServer() throws MqttException {
 		if(sendConnection == null) {
-			
+
 			String localName = DEFAULT_LOCAL_NAME+this.SERVER_URL;
 			sendConnection = new MqttClient("tcp://"+this.SERVER_URL+":"+this.SERVER_PORT, localName, new MemoryPersistence());
 			MqttConnectOptions connOpts = new MqttConnectOptions();
 			connOpts.setCleanSession(true);
 			sendConnection.setCallback(new Callback());
-		    connOpts.setCleanSession(true);
-		    connOpts.setKeepAliveInterval(3600);
-		    connOpts.setUserName(this.LOGIN);
-		    connOpts.setPassword(this.PASSWORD.toCharArray());
-		  	sendConnection.connect(connOpts);
+			connOpts.setCleanSession(true);
+			connOpts.setKeepAliveInterval(3600);
+			connOpts.setUserName(this.LOGIN);
+			connOpts.setPassword(this.PASSWORD.toCharArray());
+			sendConnection.connect(connOpts);
 		}
 	}
-	
-	
-	
+
+
+
 	public boolean isConnected(){
 		return this.sendConnection== null? true: false;
 	}

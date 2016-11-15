@@ -17,31 +17,62 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.Insets?>
 
-<View fx:id="game" prefHeight="1024"
-	prefWidth="768" maxWidth="768" maxHeight="1024" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+<View fx:id="game" prefHeight="1024" prefWidth="768" maxWidth="768"
+	maxHeight="1024" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
 	fx:controller="ummisco.marrakAir.runtime.views.GamePresenter">
 	<center>
 		<VBox alignment="CENTER">
 			<children>
-				<!-- <HBox prefHeight="200.0"> <PieChartBox fx:id="vehicleEnergy" title="Energy" 
-					follow="energy" specifyDraw="gasoline_population::gasoline::20,diesel_population::Diesel::80" 
-					/> <PieChartBox fx:id="vehicleAge" title="Vehicle standards" follow="normVehicle" 
-					specifyDraw="n2007::standard::70,n2020::innovative::30" /> <PieChartBox fx:id="vehicleType" 
-					title="Vehicle Type" follow="typeVehicle" specifyDraw="car_population::Car::40,truck_population::Truck::30,motorbike_population::Motorbike::30" 
-					/> </HBox> <HBox> <LineChartBox fx:id="pollutantGraph" follow="pollutantGraph" 
-					plots="my_date::pollution_nox_intanstanee::production instantanée d'Oxyde 
-					d'azote"> <xAxis> <NumberAxis label="Time(h)" lowerBound="0" upperBound="3" 
-					tickUnit="1" /> </xAxis> <yAxis> <NumberAxis label="NOx emission (g)" lowerBound="0" 
-					upperBound="3" tickUnit="1" /> </yAxis> </LineChartBox> <LineChartBox fx:id="particulExposition" 
-					follow="pollutantGraph" plots="my_date::pollution_particule_instantanee::production 
-					instantanée de particules fine"> <xAxis> <NumberAxis label="Time(h)" lowerBound="0" 
-					upperBound="3" tickUnit="1" /> </xAxis> <yAxis> <NumberAxis label="Particles 
-					emissions (g)" lowerBound="0" upperBound="3" tickUnit="1" /> </yAxis> </LineChartBox> 
-					<LineChartBox fx:id="CO2Production" follow="pollutantGraph" plots="my_date::pollution_co2_intanstanee::production 
-					instantanée de CO2"> <xAxis> <NumberAxis label="Time(h)" lowerBound="0" upperBound="3" 
-					tickUnit="1" /> </xAxis> <yAxis> <NumberAxis label="CO2 emissions (g)" lowerBound="0" 
-					upperBound="3" tickUnit="1" /> </yAxis> </LineChartBox> </HBox> <Separator 
-					/> -->
+				<HBox prefHeight="200.0">
+					<PieChartBox fx:id="vehicleEnergy" title="Energy"
+						follow="energy"
+						specifyDraw="gasoline_population::gasoline::20,diesel_population::Diesel::80" />
+					<PieChartBox fx:id="vehicleAge" title="Vehicle standards"
+						follow="normVehicle" specifyDraw="n2007::standard::70,n2020::innovative::30" />
+					<PieChartBox fx:id="vehicleType" title="Vehicle Type"
+						follow="typeVehicle"
+						specifyDraw="car_population::Car::40,truck_population::Truck::30,motorbike_population::Motorbike::30" />
+				</HBox>
+				<!-- <HBox>
+					<LineChartBox fx:id="pollutantGraph" follow="pollutantGraph"
+						plots="my_date::pollution_nox_intanstanee::production instantanée d'Oxyde 
+					d'azote">
+						<xAxis>
+							<NumberAxis label="Time(h)" lowerBound="0" upperBound="3"
+								tickUnit="1" />
+						</xAxis>
+						<yAxis>
+							<NumberAxis label="NOx emission (g)" lowerBound="0"
+								upperBound="3" tickUnit="1" />
+						</yAxis>
+					</LineChartBox>
+					<LineChartBox fx:id="particulExposition" follow="pollutantGraph"
+						plots="my_date::pollution_particule_instantanee::production 
+					instantanée de particules fine">
+						<xAxis>
+							<NumberAxis label="Time(h)" lowerBound="0" upperBound="3"
+								tickUnit="1" />
+						</xAxis>
+						<yAxis>
+							<NumberAxis label="Particles 
+					emissions (g)"
+								lowerBound="0" upperBound="3" tickUnit="1" />
+						</yAxis>
+					</LineChartBox>
+					<LineChartBox fx:id="CO2Production" follow="pollutantGraph"
+						plots="my_date::pollution_co2_intanstanee::production 
+					instantanée de CO2">
+						<xAxis>
+							<NumberAxis label="Time(h)" lowerBound="0" upperBound="3"
+								tickUnit="1" />
+						</xAxis>
+						<yAxis>
+							<NumberAxis label="CO2 emissions (g)" lowerBound="0"
+								upperBound="3" tickUnit="1" />
+						</yAxis>
+					</LineChartBox>
+				</HBox> -->
+				<Separator />
 				<VBox>
 
 
@@ -88,8 +119,7 @@
 				</VBox>
 
 
-				<VBox alignment="CENTER" layoutY="924"
-					prefWidth="768">
+				<VBox alignment="CENTER" layoutY="924" prefWidth="768">
 					<children>
 						<ImageView fx:id="image" />
 					</children>

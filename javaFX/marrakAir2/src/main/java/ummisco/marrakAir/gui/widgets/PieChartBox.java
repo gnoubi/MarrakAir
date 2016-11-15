@@ -1,6 +1,7 @@
 package ummisco.marrakAir.gui.widgets;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
@@ -10,7 +11,7 @@ import java.util.Optional;
 
 
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -18,11 +19,10 @@ import javafx.collections.ObservableList;
 
 import javafx.scene.Node;
 import javafx.scene.chart.PieChart;
-import javafx.scene.control.Label;
+
 import javafx.scene.control.Tooltip;
 
-import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
+
 import ummisco.marrakAir.network.MQTTConnector;
 import ummisco.marrakAir.common.FollowedVariable;
 
@@ -68,8 +68,9 @@ public class PieChartBox extends PieChart implements Observer {
 		super();
 		this.drawedData  =  new ArrayList<InternalPlot>();
 		ObservableList<PieChart.Data> pieChartData =FXCollections.observableArrayList();
+
 		this.setData(pieChartData);
-		
+
 	}
 
 	public void setFollow(String lbl)
@@ -97,11 +98,11 @@ public class PieChartBox extends PieChart implements Observer {
 		for(String tmp : variables)
 		{
 			String[] dt = tmp.split("::");
-			
+
 			InternalPlot plt = new InternalPlot(dt[0], dt[1], Float.valueOf(dt[2]).floatValue());
 
 			this.drawedData.add(plt);
-			
+
 			//this.createSymbolsProperty();
 
 		}
@@ -153,17 +154,21 @@ public class PieChartBox extends PieChart implements Observer {
 
 	@Override
 	public void update(Observable o, Object arg) {
+
 		if(o instanceof FollowedVariable)
 		{
 
 			FollowedVariable f = (FollowedVariable)o;
 			List<Map<String,Object>> datas = f.popLastData();
 			System.out.println("pie update "+ datas);
+
 			for(Map<String,Object> dts:datas)
 			{
 				updateData(dts);
 			}
+
 		}
+
 	}
 
 
@@ -186,7 +191,7 @@ public class PieChartBox extends PieChart implements Observer {
 
 	/*protected void layoutChartChildren(double top, double left, double contentWidth, double contentHeight) {
 		// TODO Auto-generated method stub
-		
+
 			getData().forEach(data ->
 			data.nameProperty().bind(
 					Bindings.concat(
@@ -196,8 +201,8 @@ public class PieChartBox extends PieChart implements Observer {
 					);
 		super.layoutChartChildren(top, left, contentWidth, contentHeight);
 	}*/
-	
-	
+
+
 	void updateTooltip(){
 		/*getData().forEach(data ->
 		data.nameProperty().bind(
