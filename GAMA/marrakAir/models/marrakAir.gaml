@@ -16,7 +16,7 @@ model affectation
 
 global
 {
-	int MOTORBYKE_ID <- 0;
+	int MOTORBIKE_ID <- 0;
 	int CAR_ID <- 1;
 	int TRUCK_ID <- 2;
 //	float ANGLE <-2.3;
@@ -33,10 +33,10 @@ global
 	float CAR_COEF <- 1;
 	float TRUCK_COEF <- 1;
 	
-	point KEYSTONE_HAUT_GAUCHE <- {0 ,0};
-	point KEYSTONE_HAUT_DROITE <- {1 ,0};
-	point KEYSTONE_BAS_GAUCHE <- {0 ,1};
-	point KEYSTONE_BAS_DROITE <- {1 ,1};
+	point KEYSTONE_HAUT_GAUCHE <- {0.006 ,0.055};
+	point KEYSTONE_HAUT_DROITE <- {0.997 ,0.094};
+	point KEYSTONE_BAS_GAUCHE <- {0.024 ,0.902};
+	point KEYSTONE_BAS_DROITE <- {0.975 , 0.903};
 	
 	
 	// Pas-de-temps à modifier en fonction de la taille du réseau
@@ -337,11 +337,7 @@ global
 		{
 			mycolor <- first(colorSet).AIRPORT;
 		}
-		
-//		create landscape from: medina
-//		{
-//			mycolor <- #red;
-//		}	
+			
 
 		create pollutant_grid from:cell_shape{
 			neighboor_buildings <- building at_distance 70#m;
@@ -362,7 +358,6 @@ global
 			containCarCounter_ndigit <- false;
 			speed_hierarchy <- world.select_speed_hierarchy(mspeed);
 			
-			// debut bac a sable de Tri
 			if hierarchy <=5{
 				aspect_size <- TRAFFIC_LIGHT_SIZES[0];
 			}else{aspect_size <-TRAFFIC_LIGHT_SIZES[1];}
@@ -375,7 +370,6 @@ global
 					add {segments_y[i]/segments_length[i]*4,- segments_x[i]/segments_length[i]*4} to: lane_position_shift;
 				}
 			}
-			// fin bac  a sable de Tri
 			
 		} //initroad
 		
@@ -403,6 +397,7 @@ global
 			label <- "CO2";
 			dimensions <- {2500,1000};//{2500,1500};
 			ymax <- 1400;
+			unit <- "kg";
 		}
 		
 		create infoDisplay  {
@@ -414,6 +409,7 @@ global
 			label <- "PM";
 			dimensions <- {2500,1000};
 			ymax <- 70;
+			unit <- "g";
 		}
 		
 //		create infoDisplay  {
@@ -506,8 +502,10 @@ global
 		write " TimeMachine " + (cycle)+ "--"+(cycle/60)+"h" ;
 	}
 	
+
 	// Définition de la fin de la simulation 24h + 1sec pour obtenir le dernier 1/4h
 	reflex stop_sim when:  time >= 24#h+1#sec
+//	reflex stop_sim when:  time >= 10#mn+1#sec
 	{
 		last_reset_time <- time;
 		do reset;
@@ -583,7 +581,7 @@ species userAgent skills:[remoteGUI]
 		diesel_population <-  100 -  gasoline_population ; //count (each.my_energy = 1);
 		truck_population <- round(tt=0?20:((carHierarchyChange count (each.my_type_of_vehicle = TRUCK_ID))/tt*100));
 		car_population <-  round(tt=0?40:((carHierarchyChange count (each.my_type_of_vehicle = CAR_ID))/tt*100)); 
-		motorbike_population <- 100 - truck_population -  car_population ; //carHierarchyChange count (each.my_type_of_vehicle = MOTORBYKE_ID);
+		motorbike_population <- 100 - truck_population -  car_population ; //carHierarchyChange count (each.my_type_of_vehicle = MOTORBIKE_ID);
 	//	pollution_nox_max <- max(list(pollutant_grid collect(each.pollutant[world.pollutentIndex("nox")])));
 		pollution_nox_intanstanee<- mean(list(building collect(mean(each.pollutant_history[world.pollutentIndex("co")]))));
 		pollution_co2_intanstanee<- mean(list(building collect(mean(each.pollutant_history[world.pollutentIndex("co2")]))));
@@ -773,15 +771,12 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 		//save ("\t" + cycle + "\t" + mid + "\t" + traffic + "\t" + sumTraffic) type:text to:carBehaviorChoice+"_SIMU_MARRAKECH_"+Name+"_"+randomSeed+"_"+gdeathDay+".txt";
 	}	
 	
-	// bac a sable Tri
+
 	reflex updateTrafficDensity
 	{
-	//	write time;
-	//	write cycle;
 		traffic_density <- 0.8*traffic_density  + traffic;
-	//	write traffic_density;
 	} 
-	// fin bac a sable Tri
+
 	
 	reflex updateCounter when:( time mod capturePeriod ) = 0 and time != 0.0
 	{
@@ -1226,7 +1221,7 @@ species car skills: [driving]
 	{
 		switch(my_type_of_vehicle)
 		{
-			match MOTORBYKE_ID{return MOTORBYKE_COEF; }
+			match MOTORBIKE_ID{return MOTORBYKE_COEF; }
 			match CAR_ID {return CAR_COEF; }
 			match TRUCK_ID {return TRUCK_COEF; }
 		}
@@ -1417,6 +1412,7 @@ species infoDisplay {
 	float sx <- sin(ANGLE);
 	string pollutant_type;
 	string label;
+	string unit;
 		
 	point dimensions;// <- {2500,1500};
 	float dx; 
@@ -1474,7 +1470,12 @@ species infoDisplay {
 //		}
 
 		draw 5#m around (line([pos({- 200, - dimensions.y*maxInfoList/ymax}),pos({dimensions.x, - dimensions.y*maxInfoList/ymax})])) color: first(colorSet).TEXT2;
-		draw(string(int(maxInfoList))+" g per hour") font: font(20) color: first(colorSet).TEXT2 at: pos({ 20, - dimensions.y * maxInfoList/ymax - 25}) rotate: ANGLE;
+		if unit ="g"
+		{
+			draw(string(int(maxInfoList))+" g per hour") font: font(20) color: first(colorSet).TEXT2 at: pos({ 20, - dimensions.y * maxInfoList/ymax - 25}) rotate: ANGLE;			
+		}else{
+			draw(string(int(maxInfoList/1000))+" kg per hour") font: font(20) color: first(colorSet).TEXT2 at: pos({ 20, - dimensions.y * maxInfoList/ymax - 25}) rotate: ANGLE;
+		}
 		draw 5#m around line([pos({- 200,5}),pos({dimensions.x,5})]) color: first(colorSet).TEXT2;
 		draw("0") color: first(colorSet).TEXT2 font: font(20) at: pos({20, 190}) rotate: ANGLE;
 		draw 5#m around line([pos({0, 200}),pos({0, - dimensions.y * maxInfoList/ymax - 200})]) color: first(colorSet).TEXT2;
@@ -1494,7 +1495,9 @@ species legend schedules:[]
 	point size <- {500,200};
 	point location <- {8000,6500,1};
 	point offset <- {size.x * cos(ANGLE), size.x * sin(ANGLE)};
-	point textOffset <- {-145,40,2};
+//	point textOffset <- {-145,40,2};
+	point textOffset <- {-190,70,2};
+	
 	point auxOffset <-{- 0.25*size.x ,2*size.y}; //{- 0.5*size.x,0.5*size.y}; // pour les essais
 	point labelOffset <- {-sin(ANGLE)*auxOffset.y + auxOffset.x * cos(ANGLE),cos(ANGLE)*auxOffset.y + auxOffset.x * sin(ANGLE),2} ;
 	int dummy_int; 
@@ -1534,6 +1537,7 @@ species legend schedules:[]
 //		draw images at:{0,0,3} ;
 
 		draw logos at: {2100,6500,5} size:{4000,600};
+//		draw logos at: {1400,6300,5} size:{2500,800};
 
 			
 		draw rect at: location color: °green;
@@ -1586,8 +1590,10 @@ species legend schedules:[]
 			point pos <- {600,4000};
 			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
 			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: first(colorSet).BAR2;
+//			draw("Gasoline") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
+//			draw("Diesel") at: pos+rotate({1010,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
 			draw("Gasoline") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
-			draw("Diesel") at: pos+rotate({1010,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
+			draw("Diesel") at: pos+rotate({890,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
 			
 
 			rect1 <- vehicle_2020_norm_rate*1500 ;
@@ -1596,8 +1602,9 @@ species legend schedules:[]
 			pos <- {600,4400};
 			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
 			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: first(colorSet).BAR2;
-			draw("2007") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
-			draw("Innovative") at: pos+rotate({800-30,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
+			draw("Innovative") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
+//			draw("Old") at: pos+rotate({800-30,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
+			draw("Old") at: pos+rotate({800+270,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
 			
 			rect1 <- percent_of_car*1500 ;
 			rect2 <- 1500 - rect1 ;
@@ -1605,8 +1612,8 @@ species legend schedules:[]
 			pos <- {600,4800};
 			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
 			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: first(colorSet).BAR2;
-			draw("Cars") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
-			draw("Motorbikes") at: pos+rotate({740-30,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
+			draw("Cars") at: pos+rotate({-170,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
+			draw("Motorbikes") at: pos+rotate({740-260,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
 		}
 			
 		
