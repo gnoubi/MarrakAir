@@ -16,11 +16,21 @@ model affectation
 
 global
 {
+	// parametres pour le display
+	point KEYSTONE_HAUT_GAUCHE <- {0.006 ,0.055};
+	point KEYSTONE_HAUT_DROITE <- {0.997 ,0.094};
+	point KEYSTONE_BAS_GAUCHE <- {0.024 ,0.902};
+	point KEYSTONE_BAS_DROITE <- {0.975 , 0.903};
+	
+	int REFRESH <- 15;
+//	point CAMERA_POSITION <- {5000,4000,9000};
+	
+	
 	int MOTORBIKE_ID <- 0;
 	int CAR_ID <- 1;
 	int TRUCK_ID <- 2;
 //	float ANGLE <-2.3;
-	float ANGLE <-2.3;
+	float ANGLE <-2.3; // angle de rotation du display
 	
 	// issue avec des rotations à 180° !! les textes ne se retournent pas
 		
@@ -33,10 +43,7 @@ global
 	float CAR_COEF <- 1;
 	float TRUCK_COEF <- 1;
 	
-	point KEYSTONE_HAUT_GAUCHE <- {0.006 ,0.055};
-	point KEYSTONE_HAUT_DROITE <- {0.997 ,0.094};
-	point KEYSTONE_BAS_GAUCHE <- {0.024 ,0.902};
-	point KEYSTONE_BAS_DROITE <- {0.975 , 0.903};
+
 	
 	
 	// Pas-de-temps à modifier en fonction de la taille du réseau
@@ -62,7 +69,7 @@ global
 //************************************************************************************************************************************************************
 
 	// Choix du réseau de simulation
-	//RESEAU DIJONNAIS	
+	//RESEAU DE MARRAKECH	
 	
 	//string mynetwork <- "../includes/RESEAU_ROUTIER_MARRAKECH/ROUTE_MAR.shp");
 	file mynetwork <- file("../includes/SIG_demonstrateur/roads_gama.shp");
@@ -122,6 +129,7 @@ global
 	
 	int last_reset <- 0; // cycle au cours duquel a eu le dernier reset
 	float last_reset_time <- 0#h;
+	int last_update;
 	 
 	map<float,list<list<float>>> readCopertData(string fileName)
 	{
@@ -193,7 +201,7 @@ global
 
 	
 	init
-	{
+	{	
 		do initialize();
 		create userAgent number:1
 		{
@@ -216,8 +224,31 @@ global
 	}
 	
 	
-	action reset
+	action reset // fonctions reset ajoutees, car le reset avec des die etait trop lourd
 	{
+		
+		ask building
+		{
+			do reset;
+		}
+		
+		
+		ask pollutant_grid
+		{
+			do reset;
+		}	
+		
+		ask road
+		{
+			do reset;
+		}
+		
+		ask infoDisplay
+		{
+			do reset;
+		}
+
+		
 		ask carHierarchyChange
 		{
 			do die;
@@ -226,63 +257,25 @@ global
 		{
 			do die;
 		}
-		ask crossroad 
-		{
-			do die;
-		}
-		ask building
-		{
-			do die;
-		}
-		ask landscape
-		{
-			do die;
-		}
 		
-		ask carCounter
-		{
-			do die;
-		}
+//		ask carCounter
+//		{
+//			do reset;
+//		}
 		
-		ask pollutant_grid
-		{
-			do die;
-		}
+//		ask traffic_light
+//		{
+//			do die;
+//		}
 		
-		ask bound
-		{
-			do die;
-		}
-		ask road
-		{
-			do die;
-		}
-		ask dummy_road
-		{
-			do die;
-		}
-		ask traffic_light
-		{
-			do die;
-		}
-		
-		ask infoDisplay
-		{
-			do die;
-		}
-		ask legend
-		{
-			do die;
-		}
-		ask colorSet
-		{
-			do die;
-		}
+
 		
 		last_reset <- cycle;
 		
+		last_update  <- 0;
+		last_reset_time <- time;
 		
-		do initialize();
+	//	do initialize();
 		
 		
 	}
@@ -300,22 +293,23 @@ global
 		
 	}
 	*/
+	
+	
 	action initialize
 	{
+	
+		
 		time <- 8#h;
 		copert <-[];
 		//Choix du parc automobile en fonction du parametres véhicle_year
 		copert <- copert + ("2007"::readCopertData( '../includes/CopertData2007.csv'));
-		copert <- copert + ("2020"::readCopertData( '../includes/CopertData2020.csv'));
-		
+		copert <- copert + ("2020"::readCopertData( '../includes/CopertData2020.csv'));		
 	//	do change_copert;
 		
 		create colorSet;
 		
 		create crossroad from:node_shape;
 		write "Map is loading..."; 
-		
-		//create traffic_light from: trafic_show with:[cell_index::int(read("num_cell"))];
 		
 		create building from: shape_file_buildings with: [type:: string(read('building'))] {
 			if type = 'small' {
@@ -337,16 +331,18 @@ global
 		{
 			mycolor <- first(colorSet).AIRPORT;
 		}
+		
 			
-
 		create pollutant_grid from:cell_shape{
 			neighboor_buildings <- building at_distance 70#m;
 //			alived_building <- alived_building accumulate(neighboor_buildings);   // modif alived
 			alived_building <- alived_building union neighboor_buildings;
 		}
 		
-		
 		create bound from: shape_file_bound;
+		
+				//create traffic_light from: trafic_show with:[cell_index::int(read("num_cell"))];
+
 		// Génération du réseau routier Attention aux attributs caractérisant la hiérarchie du réseau routier en code (Vitesse # Hiérarchie) + Vitesse réglementaire
 		create road from: mynetwork with:[mid::int(read("osm_id")), oneway::int(read("oneway")),hierarchy::float(read("TYPE_OSM_C")),roundaboutId::int(read("roundabout")),mspeed::float(read("maxspeed"))#km/#h]
 		{
@@ -386,7 +382,7 @@ global
 					add {segments_y[i]/segments_length[i]*4,- segments_x[i]/segments_length[i]*4} to: lane_position_shift;
 				}
 			}
-		} //initdummyroad
+		} //initdummyroad		
 		
 		create infoDisplay  {
 			location <- {600,1500};//{600,2500};
@@ -421,11 +417,11 @@ global
 //			label <- "NOx";
 //			dimensions <- {2500,1000};
 //			ymax <- 70;
-//		}
-		
+//		}		
+			
 		create legend {}
 		
-		// Génération des Postes de comptage DIGIT correspond au sens de comptage des PM et du sens de digitalisation du réseau routier
+// Génération des Postes de comptage DIGIT correspond au sens de comptage des PM et du sens de digitalisation du réseau routier
 		create carCounter from:PM with:[mid::int(read("Id")), isdigitOriented::bool(read("DIGIT"))]
 		{
 			associatedRoad <- road closest_to(self);
@@ -436,7 +432,7 @@ global
 			}
 			else
 			{
-				nbCar_ndigit <- nbCar_digit ;
+				nbCar_ndigit <- nbCar_digit ; // a quoi ca sert ? Les variables ne sont pas initialisees, non ?
 				nbCar_digit <- 0;
 				associatedRoad.containCarCounter_ndigit <- true;
 			}
@@ -445,9 +441,9 @@ global
 		write "Traffic rule assigment...";
 		int nbRoad <- length(road);
 		int counterm <- 0;
-		int lastUpdate  <- 0;
+	
 		 
-		ask road
+		ask road // ne marche pas pour les ghosts, a reprendre
 		{
 			tnextRoad <- road where (((each.tcrossroad = self.tcrossroad and !each.containCarCounter_digit and (each.oneway !=1)) or (each.fcrossroad = self.tcrossroad  and !each.containCarCounter_ndigit) ) and each !=self);
 			//tnextRoad <- road where (((each.fcrossroad = self.tcrossroad and !each.containCarCounter_digit and (each.oneway !="TF")) or (each.tcrossroad = self.tcrossroad  and !each.containCarCounter_ndigit) and (each.oneway !="FT") ) and each !=self);
@@ -459,17 +455,16 @@ global
 			FSPEED <- computeSPEED(fnextRoad);
 			//speed_hierarchy <- TSPEED;
 			counterm <- counterm + 1 ;
-			if(int((counterm / nbRoad) * 100) != lastUpdate )
+			if(int((counterm / nbRoad) * 100) != last_update )
 			{
-				lastUpdate <- int((counterm / nbRoad) * 100) ;
-				write " "+ lastUpdate + "% " +TSPEED ;
+				last_update <- int((counterm / nbRoad) * 100) ;
+				write " "+ last_update + "% " +TSPEED ;
 			}
 		}//askroad
 		 
 		step <- stepDuration;
 		
-		
-		
+				
 		write "Traffic counter data loading..."; 
 		
 		loop temp_line over: rows_list(countingData) 
@@ -493,9 +488,8 @@ global
 	} //init 
 	
 	
-
 	
-
+	
 	
 	reflex suivi when:false
 	{
@@ -503,15 +497,35 @@ global
 	}
 	
 
-	// Définition de la fin de la simulation 24h + 1sec pour obtenir le dernier 1/4h
-	reflex stop_sim when:  time >= 24#h+1#sec
-//	reflex stop_sim when:  time >= 10#mn+1#sec
+// Définition de la fin de la simulation 24h + 1sec pour obtenir le dernier 1/4h
+//	reflex stop_sim when:  time >= 24#h+1#sec
+//	{
+//		do halt;
+//	} 
+
+
+
+//	reflex reset_sim when:  (cycle mod 600 = 0) and (cycle > 0)
+	reflex reset_sim when:  (time -last_reset_time = 24#h+1#sec) and (cycle > 0)
 	{
-		last_reset_time <- time;
+		write "RESET";
 		do reset;
-		//do halt;
 	} 
+
+
 } //global
+
+
+
+
+
+
+
+
+
+
+
+
 
 species bound schedules:[] {
 	/*reflex doDie when: cycle=2{
@@ -529,17 +543,17 @@ species bound schedules:[] {
 	}
 }
 
-species traffic_light schedules:[]
-{
-	int cell_index;
-	aspect base
-	{
-		if((cell_index + cycle) mod TRAFFIC_LIGHT_DENSITY = 0)
-		{
-			draw circle(2#m) color:#white;	
-		}
-	}
-}
+//species traffic_light schedules:[]
+//{
+//	int cell_index;
+//	aspect base
+//	{
+//		if((cell_index + cycle) mod TRAFFIC_LIGHT_DENSITY = 0)
+//		{
+//			draw circle(2#m) color:#white;	
+//		}
+//	}
+//}
 
 species userAgent skills:[remoteGUI]
 {
@@ -658,7 +672,15 @@ species pollutant_grid schedules:[]
 		{
 			draw shape color:rgb(0,255-int((1-pollutant[world.pollutentIndex("nox")]/maxNox)*255),0) ;
 		}
+		
+		
+		action reset{
+			pollutant <- list_with(6,0.0);
+		}
 	}
+	
+	
+	
 species landscape schedules:[]
 {
 	rgb mycolor <- #blue;
@@ -668,6 +690,9 @@ species landscape schedules:[]
 		draw shape color:mycolor;
 	}
 }
+
+
+
 species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[]
 //species road 
 {
@@ -677,12 +702,16 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 	bool containCarCounter_digit <- false;
 	bool containCarCounter_ndigit <- false;
 	int traffic <- 0;
-	int sumTraffic <- 0;
-	int meanTraffic <- 0;
-	int lastTraffic <- 0;
-	int capacity <- 0;
-	int long <- 0;
-	int pcapacity <- 0;
+	
+//	enlevé temporairement car inutilisé et le calcul de la moyenne de trafic me semble faux
+//	int sumTraffic <- 0;
+//	int meanTraffic <- 0;
+//	int lastTraffic <- 0;
+//	
+	
+//	int capacity <- 0;
+//	int long <- 0;
+//	int pcapacity <- 0;
 	int speed_hierarchy <-0;
 	int hierarchy <- 0;
 	//string oneway <- "";
@@ -691,21 +720,21 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 	float mspeed <- 0.0;
 	float distance <-  shape.perimeter;
 	
-	// bac a sable de Tri
+	
 	float density <- 1.0;
 	float traffic_density <- 0.0;
 	int segments_number ;
 	int aspect_size <-1 ;
-//	rgb aspect_color <- °white;
+	
 	list<float> segments_x <- [];
 	list<float> segments_y <- [];
 	list<float> segments_length <- [];
 	list<point> lane_position_shift <- [];
-	// fin du bac a sable de Tri
 	
-	list<float> pollutant <- list<float>(list_with(6,0));
 	
+	list<float> pollutant <- list<float>(list_with(6,0));	
 	list<float> sum_pollutant <- list<float>(list_with(6,0));
+	
 	list<road> fnextRoad;
 	list<road> tnextRoad;
 	
@@ -762,7 +791,15 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 		return rtt;
 	} //COMPUTESPEED
 	
-	
+	action reset{
+		containCarCounter_digit <- false;
+		containCarCounter_ndigit <- false;
+		traffic <- 0;
+		traffic_density <- 0.0;
+		
+		pollutant <- list<float>(list_with(6,0));
+		sum_pollutant <- list<float>(list_with(6,0));
+	}
 	 
 	
 	// Sauvegarde automatique du fichier . txt tous les 1/4h pour chauqe axe de l'espace d'étude
@@ -780,10 +817,10 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 	
 	reflex updateCounter when:( time mod capturePeriod ) = 0 and time != 0.0
 	{
-		sumTraffic <- sumTraffic + traffic;
-		lastTraffic <- traffic;
+//		sumTraffic <- sumTraffic + traffic;
+//		lastTraffic <- traffic;
 		traffic <- 0;
-		meanTraffic <- sumTraffic / int(time / capturePeriod);
+//		meanTraffic <- sumTraffic / int(time / capturePeriod);
 	}
 	
 
@@ -796,14 +833,16 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 		if traffic_density > 10 {tmp <- #red;}		
 		draw 5#m around shape depth: 0 color: tmp  ;
 	}
-	aspect base3D
-	{	
-		draw shape depth:(meanTraffic)  color:rgb(float(meanTraffic*2),255-float(meanTraffic),0) size:meanTraffic; 
-	}
-	aspect base3D_capacity
-	{	
-		draw shape depth:(traffic/capacity*100) color:rgb(50+float(meanTraffic*2),255-float(meanTraffic*2),0);	
-	}
+	
+//	aspect base3D
+//	{	
+//		draw shape depth:(meanTraffic)  color:rgb(float(meanTraffic*2),255-float(meanTraffic),0) size:meanTraffic; 
+//	}
+//	aspect base3D_capacity
+//	{	
+//		draw shape depth:(traffic/capacity*100) color:rgb(50+float(meanTraffic*2),255-float(meanTraffic*2),0);	
+//	}
+
 	aspect car_lights
 	{
 		
@@ -859,7 +898,6 @@ species dummy_road schedules: []
 	int oneway;
 	int linkToRoad;
 	float density <- 1.0;
-	float traffic_density <- 8.0;
 	road linked_road;
 	int segments_number ;
 	int aspect_size <-1 ;	
@@ -904,7 +942,7 @@ species dummy_road schedules: []
 
 species crossroad
 {
-	int nbCarIncome;
+//	int nbCarIncome;
 	reflex eatcars
 	{
 		point mylocation <- location;
@@ -958,6 +996,8 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 	
 	//Nombre de véhicules créés pour la période
 	float nbCar_created <- 0;
+	
+
 	
 	reflex updateData when:  (time mod capturePeriod ) = 0 
 	{
@@ -1360,6 +1400,11 @@ species building schedules: alived_building {
 		}
 	}	
 	
+	action reset{
+		pollutant <- list_with(6,0.0);
+		pollutant_history <-list_with(6,[]);
+	}
+	
 	reflex diffuse_pollutant {
 		loop i from:0 to:length(pollutant) - 1 {
 				pollutant[i] <- pollutant[i] * (1 - diffusion_rate);	
@@ -1404,33 +1449,35 @@ species building schedules: alived_building {
 	}
 }
 
-species infoDisplay {
+species infoDisplay { //---  affichage de graphiques sur le display: courbes de couleurs bleues en haut à gauche
 
-	//point location <- {800,2500};
-	
 	float cx <- cos(ANGLE);
 	float sx <- sin(ANGLE);
-	string pollutant_type;
-	string label;
-	string unit;
+	
+	string pollutant_type; // type de polluant a afficher (pm, co2, nox, ...)
+	string label; // titre du graphe
+	string unit; // unite du polluant: g ou kg
+	
+	// --- donnees
+	list<float> infoList <- list_with(200,0.0); // donnees a afficher
+	float info; // dernier point de la liste
 		
-	point dimensions;// <- {2500,1500};
-	float dx; 
-	float ymax;// <- 1400;
-	int labelOffset <- 200;
+	//--- parametres de la zone d'affichage
+	point dimensions; // dimension du graphe
+	float dx; // taille du pas sur l'axe x
+	float ymax;// definit la valeur maximale de la serie de donnees
+	int labelOffset <- 200; // decalage de l'affichage de la legende
 	
-//	list<float> infoList <-[0.0];
-	list<float> infoList <- list_with(200,0.0); 
-	float info;
 	
-	point pos(point po)
+	
+	point pos(point po) // calcule la position des points en fonction de l'angle de rotation du display
 	{
 		float nx <- location.x + cx * po.x - sx * po.y;
 		float ny <- location.y + sx * po.x + cx * po.y;
 		return {nx,ny};
 	}
 	
-	string as_time(int t)
+	string as_time(float t) // pour afficher le temps en hh mm ss
 	{
 		int hh <- int(t / 3600);
 		int mm <- int(t / 60) - 60 * hh;
@@ -1438,10 +1485,13 @@ species infoDisplay {
 		return (hh< 10? " ":"")+string(hh) + (mm< 10? "h  ":"h ") + string(mm) + (ss< 10? "mn  ":"mn ") +string(ss)+"s";
 	}
 	
+	action reset{ // action a effectuer a chaque reinitialisation de la simulation
+		infoList <- list_with(200,0.0); 
+	}
 	
-	aspect base{
-
-
+	reflex update when: (cycle - last_update) mod 12 = 0{ // mise a jour des infos de pollution sur les batiments
+					// l'affichage ne correspond pas vraiment a la production instantanée mais plutot a la moyenne de l'exposition des batiments sur les derniers pas de temps
+					// le concept de cette mesure n'est pas clair et devrait etre revu
 		if building != nil
 		{
 			info <- mean(list(building collect(mean(each.pollutant_history[world.pollutentIndex(pollutant_type)]))))/stepDuration*3600;
@@ -1450,38 +1500,39 @@ species infoDisplay {
 			{
 				ymax <- info;
 			}
-			//if length(infoList) > 200{
 				remove index:0 from:infoList;
-			//}
-			
 		}
+	}
 	
-	
-		float maxInfoList <- max([0.1,max(infoList)]);
-	//	int digits <- cycle = 0 ? 0: int(log(cycle));
-		
-//		if length(infoList) > 1
-//		{
+	aspect base{
 
-		dx <- dimensions.x / (length(infoList)-1);
+		// calculs utiles pour determiner la taille du graphe
+ 		dx <- dimensions.x / (length(infoList)-1);
+		float maxInfoList <- max([0.1,max(infoList)]);
+
+		// affichage de la courbe
 		loop i from:0 to: length(infoList)-2{
 			draw polygon([pos({i*dx,-dimensions.y*infoList[i]/ymax}),pos({(i+1)*dx,-dimensions.y*infoList[i+1]/ymax}),pos({(i+1)*dx,0}),pos({i*dx,0})]) color: first(colorSet).CURVES; 
 		}
-//		}
 
+		// affichage de la ligne horizontale superieure + legende
 		draw 5#m around (line([pos({- 200, - dimensions.y*maxInfoList/ymax}),pos({dimensions.x, - dimensions.y*maxInfoList/ymax})])) color: first(colorSet).TEXT2;
-		if unit ="g"
+		if unit ="g"	
 		{
 			draw(string(int(maxInfoList))+" g per hour") font: font(20) color: first(colorSet).TEXT2 at: pos({ 20, - dimensions.y * maxInfoList/ymax - 25}) rotate: ANGLE;			
 		}else{
 			draw(string(int(maxInfoList/1000))+" kg per hour") font: font(20) color: first(colorSet).TEXT2 at: pos({ 20, - dimensions.y * maxInfoList/ymax - 25}) rotate: ANGLE;
 		}
+		
+		// affichage de la ligne horizontale inferieure + legende
 		draw 5#m around line([pos({- 200,5}),pos({dimensions.x,5})]) color: first(colorSet).TEXT2;
 		draw("0") color: first(colorSet).TEXT2 font: font(20) at: pos({20, 190}) rotate: ANGLE;
+		draw(as_time(time-last_reset_time)) font: font(20) at:  pos({dimensions.x - 900, 190}) color: first(colorSet).TEXT2 rotate: ANGLE; 
+		
+		// affichage de la ligne verticale + legende
 		draw 5#m around line([pos({0, 200}),pos({0, - dimensions.y * maxInfoList/ymax - 200})]) color: first(colorSet).TEXT2;
 		draw(label) font: font(20) at: pos({- 50, - dimensions.y * maxInfoList /ymax /2 + labelOffset}) color: first(colorSet).TEXT2 rotate: -90+ANGLE;
-	//	draw("Time "+string(cycle)) font: font(20) at:  pos({dimensions.x - 650 - digits*80, 190}) color: °white rotate: ANGLE; 
-		draw(as_time((cycle-last_reset)*5)) font: font(20) at:  pos({dimensions.x - 900, 190}) color: first(colorSet).TEXT2 rotate: ANGLE; 
+		
 	
 	}
 	
@@ -1491,21 +1542,30 @@ species infoDisplay {
 
 species legend schedules:[]
 {
+//------ affichage des legendes:  heatmap, logos, lieux importants
 
-	point size <- {500,200};
-	point location <- {8000,6500,1};
-	point offset <- {size.x * cos(ANGLE), size.x * sin(ANGLE)};
-//	point textOffset <- {-145,40,2};
-	point textOffset <- {-190,70,2};
+	point location <- {8000,6500,1}; // localisation de l'echelle de couleur
+
+	// ---	variables pour afficher la légende en bas à droite (echelle de couleur pour le niveau de pollution sur les buildings)
+	point size <- {500,200};	// taille d'un rectangle
+	point offset <- {size.x * cos(ANGLE), size.x * sin(ANGLE)};	// decalage pour chaque rectangle
 	
-	point auxOffset <-{- 0.25*size.x ,2*size.y}; //{- 0.5*size.x,0.5*size.y}; // pour les essais
-	point labelOffset <- {-sin(ANGLE)*auxOffset.y + auxOffset.x * cos(ANGLE),cos(ANGLE)*auxOffset.y + auxOffset.x * sin(ANGLE),2} ;
+	//---	point textOffset <- {-145,40,2};
+	point textOffset <- {-190,70,2};	// decalage des textes par rapport aux rectangles
+	point auxOffset <-{- 0.25*size.x ,2*size.y}; // pour les essais
+	point labelOffset <- {-sin(ANGLE)*auxOffset.y + auxOffset.x * cos(ANGLE),cos(ANGLE)*auxOffset.y + auxOffset.x * sin(ANGLE),2} ;	// decalage de la legende de l'echelle de couleurs
+	geometry rect <- polygon([{0,0},rotate({size.x,0}),rotate({size.x,size.y}),rotate({0,size.y})]); // rectangles de couleur pour la legende
+
+	//---	variable qui sert a faire marcher l'action draw_legend (qui ne marche pas si elle est ne retourne pas de valeur !!!)
 	int dummy_int; 
-		
-	geometry rect <- polygon([{0,0},rotate({size.x,0}),rotate({size.x,size.y}),rotate({0,size.y})]);
+	
+	
+	//--- parametres pour afficher les barres de pourcentage
+//	point pos <- {600,4000};
+	int bar_length <- 1500;
 
 	
-	point rotate(point po)
+	point rotate(point po) // calcul des coordonnees des points car le rotate de Gama ne fonctionne pas correctement
 	{
 		float nx <- cos(ANGLE) * po.x - sin(ANGLE) * po.y;
 		float ny <- sin(ANGLE) * po.x + cos(ANGLE) * po.y;
@@ -1513,9 +1573,14 @@ species legend schedules:[]
 	}
 	
 	
-	
-	int draw_legend(string label, string side, int y_label, point target, int label_offset) // je ne comprends pas pourquoi si je mets action au lieu de int, ca donne des messages d'erreur, si quelqu'un a une idee...
-	{
+	int draw_legend(string label, string side, int y_label, point target, int label_offset) // affichage des legendes des endroits  importants sur le cote
+																							// je ne comprends pas pourquoi si je mets action au lieu de int, ca donne des messages d'erreur, si quelqu'un a une idee...
+	{ // affichage des legendes des endroits  importants sur le cote
+	// label: nom du point (ex: "Koutoubia")
+	// side: cote de la legende: "left" ou "right"
+	// y_label: position du label selon l'axe y
+	// target: coordonnees des endroits importants
+	// label_offset: decalage de la chaine de caracteres 
 		switch side {
 			match "left"{
 				draw (label) at: rotate({1000 - 150 -  label_offset,y_label+50,6}) font: font("Helvetica", 18, #plain) color: first(colorSet).TEXT1 rotate: ANGLE;
@@ -1536,9 +1601,11 @@ species legend schedules:[]
 //		file images <- file("../includes/6.png");		
 //		draw images at:{0,0,3} ;
 
-		draw logos at: {2100,6500,5} size:{4000,600};
-//		draw logos at: {1400,6300,5} size:{2500,800};
+		//------  affichage des logos des partenaires
+//		draw logos at: {2100,6500,5} size:{4000,600};
+		draw logos at: {1400,6300,5} size:{2500,800};
 
+		//------  affichage de la légende en bas à droite (échelle de couleurs)
 			
 		draw rect at: location color: °green;
 		draw rect at: location+offset color: °orange;
@@ -1549,45 +1616,44 @@ species legend schedules:[]
 //		draw("HIGH") at: location+offset+offset+textOffset font:font(20) color: first(colorSet).TEXT1 rotate: ANGLE;
 //		draw("NOx level") at: location + labelOffset font: font(42) color:first(colorSet).TEXT1 rotate: ANGLE;	
 //		
-		//réglages pour le serveur de Nico
+		//réglages pour l'affichage sur le serveur COP 22
 		draw("LOW") at: location+textOffset font:font(18) color:first(colorSet).TEXT1 rotate: ANGLE;
 		draw("MED") at: location+offset+textOffset font:font(18) color:first(colorSet).TEXT1 rotate: ANGLE;
 		draw("HIGH") at: location+offset+offset+textOffset font:font(18) color: first(colorSet).TEXT1 rotate: ANGLE;
 		draw("PM level") at: location + labelOffset font: font(35) color:first(colorSet).TEXT1 rotate: ANGLE;	
-		if(show_legend){
-				
-		
+
+
+
+		if(show_legend)
+		{
+			//---  affichage des murs de la medina	
 			loop i from: 0 to: length(medina)-1
 			{
-				draw  5#m around medina[i] color: first(colorSet).MEDINA;	//ne marche pas avec around, une idée de la raison ?
+			//	draw  100#m around medina[i] color: first(colorSet).MEDINA;	//ne marche pas avec around, une idée de la raison ?
 				draw medina[i] color: first(colorSet).MEDINA;	
 			}
 
-
+			//---  affichage de la legende des lieux importants
 			dummy_int <- draw_legend("Gueliz","right",2000,{5500,2900},0);
 			dummy_int <- draw_legend("Koutoubia","right",5000,{6900,4000},0);
 			dummy_int <- draw_legend("UCA","right",500,{4970,1000},0);
 			//dummy_int <- draw_legend("Airport","left",6500,{4100,6300},500);
 			dummy_int <- draw_legend("Airport","left",5500,{4100,6300},500);
 			dummy_int <- draw_legend("Menara","left",4000,{4140,5000},500);
-			draw("Gardens") at: {180,4000+200,6} font: font("Helvetica", 18, #plain) color: first(colorSet).TEXT1 rotate: ANGLE;
 			
-			
+			draw("Gardens") at: {180,4000+200,6} font: font("Helvetica", 18, #plain) color: first(colorSet).TEXT1 rotate: ANGLE;		
 			draw("Medina Walls") at: {8420,4280,6} color:  first(colorSet).MEDINA rotate: -27;	
 			draw("Essaouira road") at: {1000,3240,6} color:  first(colorSet).TEXT1 rotate: 4;	
 			draw("Fes road") at: {8000,1620,6} color:  first(colorSet).TEXT1 rotate: -7;	
 			draw("Ourika road") at: {6410,6400,6} color:  first(colorSet).TEXT1 rotate: 63;	
-			
-
-			 
- 
 			 
 			 
-		}else{
-			float rect1 <- energy*1500;
-			float rect2 <-  1500 -  rect1 ; 
-			
+		}else{// affichage alternatif
 			point pos <- {600,4000};
+			//--- affichage des curseurs de la tablette
+			float rect1 <- energy*bar_length;
+			float rect2 <-  bar_length -  rect1 ; 
+			
 			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
 			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: first(colorSet).BAR2;
 //			draw("Gasoline") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
@@ -1596,8 +1662,8 @@ species legend schedules:[]
 			draw("Diesel") at: pos+rotate({890,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
 			
 
-			rect1 <- vehicle_2020_norm_rate*1500 ;
-			rect2 <- 1500 - rect1 ;			
+			rect1 <- vehicle_2020_norm_rate*bar_length ;
+			rect2 <- bar_length - rect1 ;			
 			
 			pos <- {600,4400};
 			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
@@ -1606,8 +1672,8 @@ species legend schedules:[]
 //			draw("Old") at: pos+rotate({800-30,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
 			draw("Old") at: pos+rotate({800+270,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
 			
-			rect1 <- percent_of_car*1500 ;
-			rect2 <- 1500 - rect1 ;
+			rect1 <- percent_of_car*bar_length ;
+			rect2 <- bar_length - rect1 ;
 			
 			pos <- {600,4800};
 			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
@@ -1619,7 +1685,7 @@ species legend schedules:[]
 		
 		
 		
-		/* de cote pour une issue sur le rotate 
+		/* de cote pour une issue sur le rotate // bug
 			float angle <- 3.0;
 			point size <- {500,200};
 			point location <- {9000,6000};
@@ -1634,10 +1700,10 @@ species legend schedules:[]
 	}
 }
 
-// espece temporaire, juste pour modifier plus facilement les couleurs et switcher entre différents jeux de couleur. Je ferai un truc plus propre plus tard
-species colorSet schedules:[]{	
+
+species colorSet schedules:[]{	// espece temporaire, juste pour modifier plus facilement les couleurs et switcher entre différents jeux de couleur. Je ferai un truc plus propre plus tard 
+								// genre charger un fichier de config xml et ne pas creer d'espece pour ca
 	rgb BACKGROUND <- rgb(10,10,10);
-	//rgb BACKGROUND <- #white;
 	rgb TEXT1 <- #white;
 	rgb LIGHTS <- #white;
 	rgb TEXT2 <- #white;
@@ -1689,7 +1755,9 @@ experiment affect type:gui
 
 // reglage serveur Nico
 //		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,9000}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
-		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,9000}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: [KEYSTONE_HAUT_GAUCHE,KEYSTONE_HAUT_DROITE,KEYSTONE_BAS_GAUCHE,KEYSTONE_BAS_DROITE]  
+		display Suivi_Vehicules_3D  type:opengl camera_pos: {5000,4000,9000}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:REFRESH use_shader: true keystone: [KEYSTONE_HAUT_GAUCHE,KEYSTONE_HAUT_DROITE,KEYSTONE_BAS_GAUCHE,KEYSTONE_BAS_DROITE]  
+
+// bug gama ? si on met une variable CAMERA_POSITION dans global et qu'on met camera_pos: CAMERA_POSITION le display apparait a l'envers // issue
 
 
 //		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
