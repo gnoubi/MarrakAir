@@ -12,34 +12,35 @@
 
 model MarrakAir
 
-/* Insert your model definition here */
-
 global
 {
-	// parametres pour le display
+// ----   parametres pour le display
 	point KEYSTONE_HAUT_GAUCHE <- {0.006 ,0.055};
 	point KEYSTONE_HAUT_DROITE <- {0.997 ,0.094};
 	point KEYSTONE_BAS_GAUCHE <- {0.024 ,0.902};
 	point KEYSTONE_BAS_DROITE <- {0.975 , 0.903};
+	float ANGLE <-2.3; // angle de rotation du display
+	// issue avec des rotations à 180° !! les textes ne se retournent pas
+//	point CAMERA_POSITION <- {5000,4000,9000}; //ca marche pas		
+	int REFRESH <- 1; // nombre de cycles entre deux rafraichissement du display
+
+
+//	int TRAFFIC_LIGHT_DENSITY <- 10; // deprecated ??
+	int CAR_LIGHTS_SPACING <- 300; // calcul de "densite" des points lumineux sur les routes. Plus la valeur est grande, MOINS il y en a
+	list<int> TRAFFIC_LIGHT_SIZES <- [9,6];//[5,3]; // deux tailles pour les points lumineux, a regler en fonction de l'ecran ou du projecteur	
 	
-	int REFRESH <- 1;
-//	point CAMERA_POSITION <- {5000,4000,9000};
+// ----   parametre de connexion	
+	bool CONNECT <- true; // true si on active la connection vers les tablettes
+	
+	
+//----	debut du modele	
 	
 	
 	int MOTORBIKE_ID <- 0;
 	int CAR_ID <- 1;
 	int TRUCK_ID <- 2;
-//	float ANGLE <-2.3;
-	float ANGLE <-2.3; // angle de rotation du display
 	
-	// issue avec des rotations à 180° !! les textes ne se retournent pas
-		
-	int TRAFFIC_LIGHT_DENSITY <- 10;
-	list<int> TRAFFIC_LIGHT_SIZES <- [9,6];//[5,3];
-	int DENSITY_COEF <- 300;
-	
-	
-	float MOTORBYKE_COEF <- 2;
+	float MOTORBIKE_COEF <- 2;
 	float CAR_COEF <- 1;
 	float TRUCK_COEF <- 1;
 	
@@ -62,7 +63,7 @@ global
 	//Génération de la graine aléatoire
 	int randomSeed <- 1;
 	
-	string Name <-"H";
+//	string Name <-"H"; // pas en usage actuellement, pour sauvegarde sur fichier
 	
 //************************************************************************************************************************************************************
 //**********************************************************FICHIER GEOGRAPHIQUE******************************************************************************
@@ -203,22 +204,24 @@ global
 	init
 	{	
 		do initialize();
-		create userAgent number:1
-		{
+		if CONNECT{
+			create userAgent number:1
+			{
 	 		do connect to:"localhost";
-			do expose variables:["gasoline_population","diesel_population"] with_name:"energy";
-			do expose variables:["truck_population","car_population","motorbike_population"] with_name:"typeVehicle";
-			do expose variables:["n2007","n2020","my_date"] with_name:"normVehicle";
-			do expose variables:["my_date","pollution_nox_intanstanee",  "pollution_particule_instantanee","pollution_co2_intanstanee" ] with_name:"pollutantGraph";
-			do listen with_name:"slide_energy" store_to:"selected_energy";
-			do listen with_name:"slide_vehicule" store_to:"selected_vehicule";
-			do listen with_name:"slide_speed" store_to:"selected_speed";
-			do listen with_name:"show_pollution" store_to:"selected_pollution";
-			do listen with_name:"show_trafic" store_to:"selected_trafic";
-			do listen with_name:"reset" store_to:"reset_simulation";
-			do listen with_name:"copert" store_to:"copert_2020_rate";
-			do listen with_name:"show_keystone" store_to:"selected_keystone";
-			do listen with_name:"show_legend" store_to:"selected_legend";
+				do expose variables:["gasoline_population","diesel_population"] with_name:"energy";
+				do expose variables:["truck_population","car_population","motorbike_population"] with_name:"typeVehicle";
+				do expose variables:["n2007","n2020","my_date"] with_name:"normVehicle";
+				do expose variables:["my_date","pollution_nox_intanstanee",  "pollution_particule_instantanee","pollution_co2_intanstanee" ] with_name:"pollutantGraph";
+				do listen with_name:"slide_energy" store_to:"selected_energy";
+				do listen with_name:"slide_vehicule" store_to:"selected_vehicule";
+				do listen with_name:"slide_speed" store_to:"selected_speed";
+				do listen with_name:"show_pollution" store_to:"selected_pollution";
+				do listen with_name:"show_trafic" store_to:"selected_trafic";
+				do listen with_name:"reset" store_to:"reset_simulation";
+				do listen with_name:"copert" store_to:"copert_2020_rate";
+				do listen with_name:"show_keystone" store_to:"selected_keystone";
+				do listen with_name:"show_legend" store_to:"selected_legend";
+			}	
 		}
 		
 	}
@@ -226,7 +229,7 @@ global
 	
 	action reset // fonctions reset ajoutees, car le reset avec des die etait trop lourd
 	{
-		
+
 		ask building
 		{
 			do reset;
@@ -258,6 +261,12 @@ global
 			do die;
 		}
 		
+		last_reset <- cycle;
+		last_update  <- 0;
+		last_reset_time <- time;
+		
+		
+		
 //		ask carCounter
 //		{
 //			do reset;
@@ -270,10 +279,7 @@ global
 		
 
 		
-		last_reset <- cycle;
-		
-		last_update  <- 0;
-		last_reset_time <- time;
+
 		
 	//	do initialize();
 		
@@ -506,7 +512,7 @@ global
 
 
 //	reflex reset_sim when:  (cycle mod 600 = 0) and (cycle > 0)
-	reflex reset_sim when:  (time - last_reset_time = 24#h+1#sec) and (cycle > 0)
+	reflex reset_sim when:  (time - last_reset_time = 24#h) and (cycle > 0)
 	{
 		write "RESET";
 		do reset;
@@ -713,24 +719,25 @@ species road schedules: ( (time - last_reset_time) mod capturePeriod ) = 0 and t
 //	int capacity <- 0;
 //	int long <- 0;
 //	int pcapacity <- 0;
+
 	int speed_hierarchy <-0;
 	int hierarchy <- 0;
-	//string oneway <- "";
 	int oneway;
 	int roundaboutId <- nil;
 	float mspeed <- 0.0;
 	float distance <-  shape.perimeter;
 	
-	
+	//--- pour l'affichage de points lumineux
 	float density <- 1.0;
 	float traffic_density <- 0.0;
 	int segments_number ;
 	int aspect_size <-1 ;
 	
+	//---  decomposition de la route en segments
 	list<float> segments_x <- [];
 	list<float> segments_y <- [];
 	list<float> segments_length <- [];
-	list<point> lane_position_shift <- [];
+	list<point> lane_position_shift <- []; // vecteur pour decaler les voies lorsqu'il y a deux voies à représenter
 	
 	
 	list<float> pollutant <- list<float>(list_with(6,0));	
@@ -812,7 +819,7 @@ species road schedules: ( (time - last_reset_time) mod capturePeriod ) = 0 and t
 	}	
 	
 
-	reflex updateTrafficDensity
+	reflex updateTrafficDensity // estimation du trafic. Decroissance exponentielle, a corriger ??
 	{
 		traffic_density <- 0.8*traffic_density  + traffic;
 	} 
@@ -846,19 +853,18 @@ species road schedules: ( (time - last_reset_time) mod capturePeriod ) = 0 and t
 //		draw shape depth:(traffic/capacity*100) color:rgb(50+float(meanTraffic*2),255-float(meanTraffic*2),0);	
 //	}
 
-	aspect car_lights
-	{
-		
-		point new_point;
-		int lights_number;
+	aspect car_lights //affichage de lumieres sur les routes
+	{		
+		int lights_number; // nombre lumieres a afficher sur un segment
+		point new_point; // point courant  a afficher
 
-		if cycle > 0 
+		if !show_keystone 
 		{
 			density <- min([10,traffic_density]);
 			
 		 	loop i from: 0 to: segments_number-1{
 		 	 		
-// --------		pour afficher des petits triangles pour indiquer le sens de circulation sur chaque route (pour faire des tests)
+// --------		pour afficher des petits triangles pour indiquer le sens de circulation sur chaque route 
 //		 		if oneway = 1 {
 //		 			float angleTriangle <- acos(segments_x[i]/segments_length[i]);
 //		 			angleTriangle <- segments_y[i]<0 ? - angleTriangle : angleTriangle;
@@ -866,8 +872,8 @@ species road schedules: ( (time - last_reset_time) mod capturePeriod ) = 0 and t
 //		 		}
 		 		
 		 		
-				lights_number <- max([1,int(density * segments_length[i]/DENSITY_COEF)]);
-			 	loop j from:0 to: lights_number-1{
+				lights_number <- max([1,int(density * segments_length[i]/CAR_LIGHTS_SPACING)]); // nombre de lumiere proportionnel a la densite de trafic et a la longueur du segment
+			 	loop j from:0 to: lights_number-1{// calcul des positions des points. Les points bougent: leur position est decalee selon le cycle
 			 		if oneway = 1{		 			
 			 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,40)/40)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,40)/40)/lights_number};
 							draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
@@ -884,21 +890,21 @@ species road schedules: ( (time - last_reset_time) mod capturePeriod ) = 0 and t
 				}
 			}
 			
-		}else{
-			draw 5#m around shape depth: 0 color:#purple  ;
+		}else{// affichage des routes pour le keystone
+			draw 5#m around shape depth: 0 color:#red  ;
 		}
 		
 		
 	}
 } //road
 
-species dummy_road schedules: [] 
+species dummy_road schedules: [] 	//routes sur lesquelles ne tourne pas le modele, mais que l'on souhaite tout de meme afficher
 {
 	int mid;
 	int oneway;
-	int linkToRoad;
+	int linkToRoad;	// id d'une route normale liee a cette dummy_road. La densite de trafic afficher sur la dummy_road sera la meme que celle de la route liee
 	float density <- 1.0;
-	road linked_road;
+	road linked_road; // route liee a cette dummy road
 	int segments_number ;
 	int aspect_size <-1 ;	
 	list<float> segments_x <- [];
@@ -915,8 +921,8 @@ species dummy_road schedules: []
 		density <- min([10,linked_road.traffic_density]);
 
 	 	loop i from: 0 to: segments_number-1{
-			lights_number <- max([1,int(density * segments_length[i]/DENSITY_COEF)]);
-		 	loop j from:0 to: lights_number-1{
+			lights_number <- max([1,int(density * segments_length[i]/CAR_LIGHTS_SPACING)]); // nombre de lumiere proportionnel a la densite de trafic et a la longueur du segment
+		 	loop j from:0 to: lights_number-1{// calcul des positions des points. Les points bougent: leur position est decalee selon le cycle
 		 		if oneway = 1{		
 		 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,40)/40)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,40)/40)/lights_number};
 						draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
@@ -1000,23 +1006,27 @@ species carCounter schedules: ( (time - last_reset_time) mod 1#mn ) = 0 ? carCou
 	
 
 	
-	reflex updateData when:  ((time - last_reset_time) mod capturePeriod ) = 0 
+	reflex updateData when:  ((time - last_reset_time) mod capturePeriod)  = 0
 	{
 		int idex <-  int((time - last_reset_time) / (capturePeriod )) ;
-		int carToCreate <- carCounts at idex ;
-		nbCar_created <- 0;
-		
-		if(isdigitOriented)
-		{
-			nbCar_digit <- carToCreate ;
-			nbCar_ndigit <- 0;
-			associatedRoad.containCarCounter_digit <- true;
-		}
-		else
-		{
-			nbCar_ndigit <- carToCreate ;
-			nbCar_digit <- 0;
-			associatedRoad.containCarCounter_ndigit <- true;
+		if idex < length(carCounts){
+			int carToCreate <- carCounts at idex ;
+			nbCar_created <- 0;
+			
+			if(isdigitOriented)
+			{
+				nbCar_digit <- carToCreate ;
+				nbCar_ndigit <- 0;
+				associatedRoad.containCarCounter_digit <- true;
+			}
+			else
+			{
+				nbCar_ndigit <- carToCreate ;
+				nbCar_digit <- 0;
+				associatedRoad.containCarCounter_ndigit <- true;
+			}
+		}else{
+			write "verification reset. time = "+(time - last_reset_time);
 		}
 	} //updateData
 	
@@ -1262,7 +1272,7 @@ species car skills: [driving]
 	{
 		switch(my_type_of_vehicle)
 		{
-			match MOTORBIKE_ID{return MOTORBYKE_COEF; }
+			match MOTORBIKE_ID{return MOTORBIKE_COEF; }
 			match CAR_ID {return CAR_COEF; }
 			match TRUCK_ID {return TRUCK_COEF; }
 		}
@@ -1503,17 +1513,7 @@ species infoDisplay { //---  affichage de graphiques sur le display: courbes de 
 				remove index:0 from:infoList;
 		}
 	}
-	float get_simulation_time
-    {
-        return time - last_reset_time;
-    }
-	
-	reflex essai
-    {
-        float truc <- get_simulation_time;
-        write "time";
-        write truc;
-    }
+
 	
 	aspect base{
 
@@ -1629,12 +1629,12 @@ species legend schedules:[]
 	
 
 	aspect base{
-//		file images <- file("../includes/6.png");		
-//		draw images at:{0,0,3} ;
+		//file images <- file("../includes/background_6.png");		
+		//draw images at:{0,0,-1} ;
 
 		//------  affichage des logos des partenaires
 //		draw logos at: {2100,6500,5} size:{4000,600};
-		draw logos at: {1400,6300,5} size:{2500,800};
+//		draw logos at: {1400,6300,5} size:{2500,800};
 
 		//------  affichage de la légende en bas à droite (échelle de couleurs)
 			
@@ -1767,10 +1767,8 @@ experiment MarrakAir type:gui
 	output {
 
 
-//		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,8500}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
-
 // reglage serveur Nico
-		display Suivi_Vehicules_3D  type:opengl camera_pos: {5000,4000,9000}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:REFRESH use_shader: true keystone: [KEYSTONE_HAUT_GAUCHE,KEYSTONE_HAUT_DROITE,KEYSTONE_BAS_GAUCHE,KEYSTONE_BAS_DROITE]  
+		display Suivi_Vehicules_3D  type:opengl camera_pos: {5000,4000,8500}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:REFRESH use_shader: true keystone: [KEYSTONE_HAUT_GAUCHE,KEYSTONE_HAUT_DROITE,KEYSTONE_BAS_GAUCHE,KEYSTONE_BAS_DROITE]  
 
 // bug gama ? si on met une variable CAMERA_POSITION dans global et qu'on met camera_pos: CAMERA_POSITION le display apparait a l'envers // issue
 

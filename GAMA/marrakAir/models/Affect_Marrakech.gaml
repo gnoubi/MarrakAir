@@ -462,7 +462,7 @@ species userAgent skills:[remoteGUI]
 	 */	n2007 <- round(tt=0?50:(carHierarchyChange count (each.my_vehicle_year = 2007)/tt)*100) ;
 		n2020 <- 100 - n2007 ;
 		my_date <- cycle;
-		write "my_date";
+
 		
 		
 		if(selected_energy != selected_energy_old) {
@@ -723,14 +723,15 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 		if(isdigitOriented)
 		{
 			nbCar_digit <- carToCreate ;
-			nbCar_ndigit <- 0;
-			associatedRoad.containCarCounter_digit <- true;
+			write nbCar_ndigit;
+//			nbCar_ndigit <- 0;
+//			associatedRoad.containCarCounter_digit <- true;
 		}
 		else
 		{
 			nbCar_ndigit <- carToCreate ;
-			nbCar_digit <- 0;
-			associatedRoad.containCarCounter_ndigit <- true;
+//			nbCar_digit <- 0;
+//			associatedRoad.containCarCounter_ndigit <- true;
 		}
 	} //updateData
 	
