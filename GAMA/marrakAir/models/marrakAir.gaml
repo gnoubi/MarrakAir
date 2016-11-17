@@ -10,7 +10,7 @@
  ***  
  */
 
-model affectation
+model MarrakAir
 
 /* Insert your model definition here */
 
@@ -22,7 +22,7 @@ global
 	point KEYSTONE_BAS_GAUCHE <- {0.024 ,0.902};
 	point KEYSTONE_BAS_DROITE <- {0.975 , 0.903};
 	
-	int REFRESH <- 15;
+	int REFRESH <- 1;
 //	point CAMERA_POSITION <- {5000,4000,9000};
 	
 	
@@ -369,7 +369,7 @@ global
 			
 		} //initroad
 		
-		create dummy_road from: mydummynetwork with:[oneway::int(read("oneway")),linkToRoad::int(read("linkToRoad"))]
+		create dummy_road from: mydummynetwork with:[mid:: int(read("osm_id")),oneway::int(read("oneway")),linkToRoad::int(read("linkToRoad"))]
 		{
 			linked_road <- road first_with (each.mid = linkToRoad);
 			aspect_size <- TRAFFIC_LIGHT_SIZES[0];
@@ -385,31 +385,31 @@ global
 		} //initdummyroad		
 		
 		create infoDisplay  {
-			location <- {600,1500};//{600,2500};
+			location <- {800,1450};//{600,2500};
 			float nx <- cos(ANGLE) * location.x - sin(ANGLE) * location.y;
 			float ny <- sin(ANGLE) * location.x + cos(ANGLE) * location.y;
 			location <- {nx, ny};
 			pollutant_type <- "co2";
 			label <- "CO2";
-			dimensions <- {2500,1000};//{2500,1500};
+			dimensions <- {2500,900};//{2500,1500};
 			ymax <- 1400;
 			unit <- "kg";
 		}
 		
 		create infoDisplay  {
-			location <- {600,3000};
+			location <- {800,2900};
 			float nx <- cos(ANGLE) * location.x - sin(ANGLE) * location.y;
 			float ny <- sin(ANGLE) * location.x + cos(ANGLE) * location.y;
 			location <- {nx, ny};
 			pollutant_type <- "pm";
 			label <- "PM";
-			dimensions <- {2500,1000};
+			dimensions <- {2500,900};
 			ymax <- 70;
 			unit <- "g";
 		}
 		
 //		create infoDisplay  {
-//			location <- {600,4500};
+//			location <- {800,4500};
 //			float nx <- cos(ANGLE) * location.x - sin(ANGLE) * location.y;
 //			float ny <- sin(ANGLE) * location.x + cos(ANGLE) * location.y;
 //			location <- {nx, ny};
@@ -506,11 +506,12 @@ global
 
 
 //	reflex reset_sim when:  (cycle mod 600 = 0) and (cycle > 0)
-	reflex reset_sim when:  (time -last_reset_time = 24#h+1#sec) and (cycle > 0)
+	reflex reset_sim when:  (time - last_reset_time = 24#h+1#sec) and (cycle > 0)
 	{
 		write "RESET";
 		do reset;
 	} 
+
 
 
 } //global
@@ -693,7 +694,7 @@ species landscape schedules:[]
 
 
 
-species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[]
+species road schedules: ( (time - last_reset_time) mod capturePeriod ) = 0 and time != 0.0 ? road :[]
 //species road 
 {
 	crossroad fcrossroad;
@@ -800,6 +801,8 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 		pollutant <- list<float>(list_with(6,0));
 		sum_pollutant <- list<float>(list_with(6,0));
 	}
+	
+
 	 
 	
 	// Sauvegarde automatique du fichier . txt tous les 1/4h pour chauqe axe de l'espace d'étude
@@ -815,7 +818,7 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 	} 
 
 	
-	reflex updateCounter when:( time mod capturePeriod ) = 0 and time != 0.0
+	reflex updateCounter when:( (time - last_reset_time) mod capturePeriod ) = 0 and time != 0.0
 	{
 //		sumTraffic <- sumTraffic + traffic;
 //		lastTraffic <- traffic;
@@ -849,16 +852,13 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 		point new_point;
 		int lights_number;
 
-		if cycle > 0 {
-		
+		if cycle > 0 
+		{
 			density <- min([10,traffic_density]);
 			
-	
 		 	loop i from: 0 to: segments_number-1{
-		 	
-		 	
-		 		
-		 		// pour afficher des petits triangles pour indiquer le sens de circulation sur chaque route (pour faire des tests)
+		 	 		
+// --------		pour afficher des petits triangles pour indiquer le sens de circulation sur chaque route (pour faire des tests)
 //		 		if oneway = 1 {
 //		 			float angleTriangle <- acos(segments_x[i]/segments_length[i]);
 //		 			angleTriangle <- segments_y[i]<0 ? - angleTriangle : angleTriangle;
@@ -868,13 +868,12 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 		 		
 				lights_number <- max([1,int(density * segments_length[i]/DENSITY_COEF)]);
 			 	loop j from:0 to: lights_number-1{
-			 		if oneway = 1{
-			 			
+			 		if oneway = 1{		 			
 			 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,40)/40)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,40)/40)/lights_number};
 							draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
 			 		}else{
 			 			
-			 				new_point <- {lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j -  mod(cycle,11)/11)/lights_number, lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j - mod(cycle,11)/11)/lights_number};
+			 				new_point <- {lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j + 1 -  mod(cycle,11)/11)/lights_number, lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j + 1 - mod(cycle,11)/11)/lights_number};
 							draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
 							new_point <- {-lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j +  mod(cycle,11)/11)/lights_number, -lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j + mod(cycle,11)/11)/lights_number};
 							draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
@@ -895,6 +894,7 @@ species road schedules: ( time mod capturePeriod ) = 0 and time != 0.0 ? road :[
 
 species dummy_road schedules: [] 
 {
+	int mid;
 	int oneway;
 	int linkToRoad;
 	float density <- 1.0;
@@ -917,13 +917,12 @@ species dummy_road schedules: []
 	 	loop i from: 0 to: segments_number-1{
 			lights_number <- max([1,int(density * segments_length[i]/DENSITY_COEF)]);
 		 	loop j from:0 to: lights_number-1{
-		 		if oneway = 1{
-		 			
+		 		if oneway = 1{		
 		 				new_point <- {shape.points[i].x + segments_x[i] * (j +  mod(cycle,40)/40)/lights_number, shape.points[i].y + segments_y[i] * (j + mod(cycle,40)/40)/lights_number};
 						draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
 		 		}else{
 		 			
-		 				new_point <- {lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j -  mod(cycle,100)/100)/lights_number, lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j - mod(cycle,100)/100)/lights_number};
+		 				new_point <- {lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j + 1 -  mod(cycle,100)/100)/lights_number, lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j + 1 - mod(cycle,100)/100)/lights_number};
 						draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
 						new_point <- {-lane_position_shift[i].x + shape.points[i].x + segments_x[i] * (j +  mod(cycle,100)/100)/lights_number, -lane_position_shift[i].y + shape.points[i].y + segments_y[i] * (j + mod(cycle,100)/100)/lights_number};
 						draw circle(aspect_size, new_point) color: first(colorSet).LIGHTS;
@@ -948,6 +947,8 @@ species crossroad
 		point mylocation <- location;
 		list<car> realcars <- car where (each.location = mylocation and !(each.isGhost ));
 		list<car> ghostcars <- car where (each.location = mylocation and (each.isGhost ));
+		
+		
 		int nbcar <- min([length(realcars ),length(ghostcars)]);
 			
 		int i <-0;	
@@ -983,7 +984,7 @@ species crossroad
 	}
 }// crossroads
 
-species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
+species carCounter schedules: ( (time - last_reset_time) mod 1#mn ) = 0 ? carCounter: []
 {
 	int mid;
 	list<int> carCounts <- [];
@@ -999,9 +1000,9 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 	
 
 	
-	reflex updateData when:  (time mod capturePeriod ) = 0 
+	reflex updateData when:  ((time - last_reset_time) mod capturePeriod ) = 0 
 	{
-		int idex <-  int(time / (capturePeriod )) ;
+		int idex <-  int((time - last_reset_time) / (capturePeriod )) ;
 		int carToCreate <- carCounts at idex ;
 		nbCar_created <- 0;
 		
@@ -1468,8 +1469,7 @@ species infoDisplay { //---  affichage de graphiques sur le display: courbes de 
 	float ymax;// definit la valeur maximale de la serie de donnees
 	int labelOffset <- 200; // decalage de l'affichage de la legende
 	
-	
-	
+
 	point pos(point po) // calcule la position des points en fonction de l'angle de rotation du display
 	{
 		float nx <- location.x + cx * po.x - sx * po.y;
@@ -1503,6 +1503,17 @@ species infoDisplay { //---  affichage de graphiques sur le display: courbes de 
 				remove index:0 from:infoList;
 		}
 	}
+	float get_simulation_time
+    {
+        return time - last_reset_time;
+    }
+	
+	reflex essai
+    {
+        float truc <- get_simulation_time;
+        write "time";
+        write truc;
+    }
 	
 	aspect base{
 
@@ -1530,7 +1541,9 @@ species infoDisplay { //---  affichage de graphiques sur le display: courbes de 
 		draw(as_time(time-last_reset_time)) font: font(20) at:  pos({dimensions.x - 900, 190}) color: first(colorSet).TEXT2 rotate: ANGLE; 
 		
 		// affichage de la ligne verticale + legende
-		draw 5#m around line([pos({0, 200}),pos({0, - dimensions.y * maxInfoList/ymax - 200})]) color: first(colorSet).TEXT2;
+//		draw 5#m around line([pos({0, 200}),pos({0, - dimensions.y * maxInfoList/ymax - 200})]) color: first(colorSet).TEXT2;
+		draw 5#m around line([pos({0, 200}),pos({0, - dimensions.y - 200})]) color: first(colorSet).TEXT2;
+
 		draw(label) font: font(20) at: pos({- 50, - dimensions.y * maxInfoList /ymax /2 + labelOffset}) color: first(colorSet).TEXT2 rotate: -90+ANGLE;
 		
 	
@@ -1559,10 +1572,6 @@ species legend schedules:[]
 	//---	variable qui sert a faire marcher l'action draw_legend (qui ne marche pas si elle est ne retourne pas de valeur !!!)
 	int dummy_int; 
 	
-	
-	//--- parametres pour afficher les barres de pourcentage
-//	point pos <- {600,4000};
-	int bar_length <- 1500;
 
 	
 	point rotate(point po) // calcul des coordonnees des points car le rotate de Gama ne fonctionne pas correctement
@@ -1583,8 +1592,8 @@ species legend schedules:[]
 	// label_offset: decalage de la chaine de caracteres 
 		switch side {
 			match "left"{
-				draw (label) at: rotate({1000 - 150 -  label_offset,y_label+50,6}) font: font("Helvetica", 18, #plain) color: first(colorSet).TEXT1 rotate: ANGLE;
-				draw 5#m around polyline([rotate({1000, y_label,6}), rotate({target.x - 800, y_label,6}),{target.x,target.y,6}])  color: first(colorSet).TEXT1;
+				draw (label) at: rotate({1200 - 150 -  label_offset,y_label+50,6}) font: font("Helvetica", 18, #plain) color: first(colorSet).TEXT1 rotate: ANGLE;
+				draw 5#m around polyline([rotate({1200, y_label,6}), rotate({target.x - 800, y_label,6}),{target.x,target.y,6}])  color: first(colorSet).TEXT1;
 				draw circle(50) at: {target.x,target.y,6} color: #white;
 				}
 			match "right" {
@@ -1593,6 +1602,28 @@ species legend schedules:[]
 				draw circle(50) at: {target.x,target.y,6} color: #white;		
 			}
 		}
+		return 0;
+	}
+	
+	int draw_bars(float info, point position, point dimensions, string left_label, string right_label, int x_left_label_offset, int x_right_label_offset, int y_label_offset) 
+	//	affichage des curseurs de la tablette
+	{
+		// position: position de la barre
+		// dimensions: dimensions de la barre
+		// left_label: etiquette de gauche
+		// right_label: etiquette de droite
+		// x_left_label_offset: decalage sur l'axe des x du texte de gauche
+		// x_right_label_offset: decalage sur l'axe des x du texte de droite
+		// y_label_offset: decalage en y des textes
+		
+		
+		float rect1 <- info*dimensions.x;
+		float rect2 <-  dimensions.x -  rect1 ; 
+			
+		draw polygon([rotate(position),rotate({position.x+rect1,position.y}),rotate({rect1+position.x,dimensions.y+position.y}),rotate({position.x,dimensions.y+position.y})]) color: first(colorSet).BAR1;
+		draw  polygon([rotate({position.x+rect1,position.y}),rotate({position.x+rect1+rect2,position.y}),rotate({position.x+rect1+rect2,position.y+dimensions.y}),rotate({position.x+rect1,position.y+dimensions.y})]) color: first(colorSet).BAR2;
+		draw(left_label) at: position+rotate({x_left_label_offset, y_label_offset}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
+		draw(right_label) at: position+rotate({dimensions.x + x_right_label_offset, y_label_offset}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
 		return 0;
 	}
 	
@@ -1640,8 +1671,9 @@ species legend schedules:[]
 			//dummy_int <- draw_legend("Airport","left",6500,{4100,6300},500);
 			dummy_int <- draw_legend("Airport","left",5500,{4100,6300},500);
 			dummy_int <- draw_legend("Menara","left",4000,{4140,5000},500);
-			
-			draw("Gardens") at: {180,4000+200,6} font: font("Helvetica", 18, #plain) color: first(colorSet).TEXT1 rotate: ANGLE;		
+			draw("Gardens") at: {380,4000+200,6} font: font("Helvetica", 18, #plain) color: first(colorSet).TEXT1 rotate: ANGLE;		
+
+
 			draw("Medina Walls") at: {8420,4280,6} color:  first(colorSet).MEDINA rotate: -27;	
 			draw("Essaouira road") at: {1000,3240,6} color:  first(colorSet).TEXT1 rotate: 4;	
 			draw("Fes road") at: {8000,1620,6} color:  first(colorSet).TEXT1 rotate: -7;	
@@ -1649,37 +1681,21 @@ species legend schedules:[]
 			 
 			 
 		}else{// affichage alternatif
-			point pos <- {600,4000};
+		
 			//--- affichage des curseurs de la tablette
-			float rect1 <- energy*bar_length;
-			float rect2 <-  bar_length -  rect1 ; 
-			
-			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
-			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: first(colorSet).BAR2;
-//			draw("Gasoline") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
-//			draw("Diesel") at: pos+rotate({1010,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
-			draw("Gasoline") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
-			draw("Diesel") at: pos+rotate({890,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
+			dummy_int <- draw_bars(energy,{800,4000}, {1500,100}, "Gasoline", "Diesel", -150, 870 - 1500,280);
+			dummy_int <- draw_bars(vehicle_2020_norm_rate,{800,4400}, {1500,100}, "Innovative", "Old", -150, 800+250 - 1500,280);
+			dummy_int <- draw_bars(percent_of_car,{800,4800}, {1500,100}, "Cars", "Motorbikes", -170, 740-260 - 1500,280);
 			
 
-			rect1 <- vehicle_2020_norm_rate*bar_length ;
-			rect2 <- bar_length - rect1 ;			
-			
-			pos <- {600,4400};
-			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
-			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: first(colorSet).BAR2;
-			draw("Innovative") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
-//			draw("Old") at: pos+rotate({800-30,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
-			draw("Old") at: pos+rotate({800+270,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
-			
-			rect1 <- percent_of_car*bar_length ;
-			rect2 <- bar_length - rect1 ;
-			
-			pos <- {600,4800};
-			draw polygon([rotate(pos),rotate({pos.x+rect1,pos.y}),rotate({rect1+pos.x,100+pos.y}),rotate({pos.x,100+pos.y})]) color: first(colorSet).BAR1;
-			draw  polygon([rotate({pos.x+rect1,pos.y}),rotate({pos.x+rect1+rect2,pos.y}),rotate({pos.x+rect1+rect2,pos.y+100}),rotate({pos.x+rect1,pos.y+100})]) color: first(colorSet).BAR2;
-			draw("Cars") at: pos+rotate({-170,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
-			draw("Motorbikes") at: pos+rotate({740-260,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
+// old parameters		
+////			draw("Gasoline") at: pos+rotate({-150,280}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
+////			draw("Diesel") at: pos+rotate({1010,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;			
+////			draw("Old") at: pos+rotate({800-30,280}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;			
+		
+	
+
+
 		}
 			
 		
@@ -1734,7 +1750,7 @@ species colorSet schedules:[]{	// espece temporaire, juste pour modifier plus fa
 
 
 
-experiment affect type:gui
+experiment MarrakAir type:gui
 {
 	parameter "TimeToDeath: " var:gdeathDay ; //Parametre à explorer GAUSS ???
 	parameter "EcartGauss: " var:ecart ;
@@ -1754,13 +1770,12 @@ experiment affect type:gui
 //		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,8500}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
 
 // reglage serveur Nico
-//		display Suivi_Vehicules_3D  type:opengl camera_pos:{5000,4000,9000}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
 		display Suivi_Vehicules_3D  type:opengl camera_pos: {5000,4000,9000}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:REFRESH use_shader: true keystone: [KEYSTONE_HAUT_GAUCHE,KEYSTONE_HAUT_DROITE,KEYSTONE_BAS_GAUCHE,KEYSTONE_BAS_DROITE]  
 
 // bug gama ? si on met une variable CAMERA_POSITION dans global et qu'on met camera_pos: CAMERA_POSITION le display apparait a l'envers // issue
 
 
-//		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:15 use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
+//		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh: every(1#cycle) use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
 
 
 		{
