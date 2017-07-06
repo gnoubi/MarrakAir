@@ -92,13 +92,12 @@ public final class MQTTConnector {
 		if(currDate.getTime() - date.getTime() >= maxTime){
 				if(!prevTopic.contains(topic)){
 					//AbstractDriver
-					System.out.println("message received "+ topic);
+					System.out.println("message received yy "+ topic);
 					XStream dataStreamer = new XStream(new DomDriver() );// DomDriver());
 					@SuppressWarnings("unchecked")
 					Map<String, Object> data = (Map<String, Object>)dataStreamer.fromXML(message);
 					ArrayList<FollowedVariable> dts=this.receivedData.get(topic);
-					System.out.println("message received "+ topic+" "+data);
-
+					System.out.println("message received xxx"+ topic+" "+data+" "+data.getClass().getName());
 					if(dts==null)
 					{
 						//dts = new FollowedVariable(topic);

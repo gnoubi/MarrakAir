@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.gluonhq.charm.glisten.mvc.View?>
+<?import javafx.scene.chart.AreaChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import ummisco.marrakAir.gui.widgets.SliderBox?>
+<?import ummisco.marrakAir.gui.widgets.PieChartBox?>
+<?import javafx.scene.control.Button?>
+<?import com.gluonhq.charm.glisten.control.Icon?>
+<?import ummisco.marrakAir.gui.widgets.LineChartBox?>
+<?import ummisco.marrakAir.gui.widgets.MapPane?>
+
+<View fx:id="game" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="350.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ummisco.marrakAir.runtime.views.MapPresenter">
+   <center>
+      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="15.0">
+         <children>
+          	<MapPane />
+         </children>
+      </VBox>
+   </center>
+</View>

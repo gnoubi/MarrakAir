@@ -16,6 +16,7 @@ model affectation
 
 global
 {
+	int total_creation <- 0;
 	// Pas-de-temps à modifier en fonction de la taille du réseau
 	float stepDuration <- 5#s; //#mn ; 	
 	
@@ -573,6 +574,7 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 	
 	reflex updateData when:  (time mod capturePeriod ) = 0 
 	{
+		write "car count "+ total_creation;
 		int idex <-  int(time / (capturePeriod )) ;
 		int carToCreate <- carCounts at idex ;
 		nbCar_created <- 0;
@@ -603,6 +605,7 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 	reflex createcarDigit when: nbCar_digit_to_create >= 1 // and false
 	{
 		nbCar_digit_to_create <-  createcars(associatedRoad.tcrossroad,associatedRoad.fcrossroad,nbCar_digit_to_create);
+		
 	} //Sens de compatge et de digitalisation des véhicules sur le réseau routier
 	
 	reflex createcarnDigit when: nbCar_ndigit_to_create >= 1// and false
@@ -614,6 +617,8 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 	{
 		loop while: nbCarToCreate >= 1
 		{
+			
+			total_creation <- total_creation + 1;
 			int is_gasoline <- flip(energy)?0:1;
 			int type_of_vehicule <- flip(percent_of_truck)?2:(flip(percent_of_car)?1:0);
 		 	if(carBehaviorChoice = "hierarchy")
@@ -630,6 +635,7 @@ species carCounter schedules: ( time mod 1#mn ) = 0 ? carCounter: []
 					currentRoad <- location;	
 					my_energy <- is_gasoline;
 					my_type_of_vehicle <- type_of_vehicule;
+					
 								
 				}
 				create carHierarchyChange number:1

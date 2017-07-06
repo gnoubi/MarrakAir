@@ -212,7 +212,9 @@ global
 				do expose variables:["truck_population","car_population","motorbike_population"] with_name:"typeVehicle";
 				do expose variables:["n2007","n2020","my_date"] with_name:"normVehicle";
 				do expose variables:["my_date","pollution_nox_intanstanee",  "pollution_particule_instantanee","pollution_co2_intanstanee" ] with_name:"pollutantGraph";
-				do listen with_name:"slide_energy" store_to:"selected_energy";
+	
+
+	do listen with_name:"slide_energy" store_to:"selected_energy";
 				do listen with_name:"slide_vehicule" store_to:"selected_vehicule";
 				do listen with_name:"slide_speed" store_to:"selected_speed";
 				do listen with_name:"show_pollution" store_to:"selected_pollution";
@@ -1055,6 +1057,9 @@ species carCounter schedules: ( (time - last_reset_time) mod 1#mn ) = 0 ? carCou
 		loop while: nbCarToCreate >= 1
 		{
 			int is_gasoline <- flip(energy)?0:1;
+			
+			write "energy "+ energy + " "+is_gasoline;
+			
 			int tmp_norm <- flip(vehicle_2020_norm_rate)?2020:2007;
 			
 //			int type_of_vehicule <- flip(percent_of_truck)?2:(flip(percent_of_car)?1:0);
@@ -1429,13 +1434,28 @@ species building schedules: alived_building {
 			float rate <- pollutant[world.pollutentIndex("pm")]/maxNox_buildings;
 			rgb mcol;// <- ((maxNox_buildings/3)>rate)?first(colorSet).BUILDING1 : (maxNox_buildings<rate?first(colorSet).BUILDING3:first(colorSet).BUILDING2);
 			float threshold <-1* maxNox_buildings/5;
-			if rate < threshold
+			if(rate < 10)
+			{
+				mcol<- #green;
+			}
+			else
+			{
+				if(rate > 100)
+				{
+					mcol<- #red;
+				}
+				else
+				{
+					mcol <- rgb(255*rate/threshold,136+40*rate/threshold,0);
+				}
+			}
+		/*	if rate < threshold
 			{
 				mcol <- rgb(255*rate/threshold,136+40*rate/threshold,0);
 			}else{
 				mcol <- rgb(255,175-175*rate/(maxNox_buildings-threshold),0);
 			}
-			
+			 */
 //					{
 //				mcol <- rgb(255*sqrt(rate)*sqrt(2/maxNox_buildings),136+40*sqrt(rate)*sqrt(2/maxNox_buildings),0);
 //			}else{
@@ -1617,13 +1637,13 @@ species legend schedules:[]
 		// y_label_offset: decalage en y des textes
 		
 		
-		float rect1 <- info*dimensions.x;
-		float rect2 <-  dimensions.x -  rect1 ; 
+		float rect2 <- info*dimensions.x;
+		float rect1 <-  dimensions.x -  rect2 ; 
 			
-		draw polygon([rotate(position),rotate({position.x+rect1,position.y}),rotate({rect1+position.x,dimensions.y+position.y}),rotate({position.x,dimensions.y+position.y})]) color: first(colorSet).BAR1;
-		draw  polygon([rotate({position.x+rect1,position.y}),rotate({position.x+rect1+rect2,position.y}),rotate({position.x+rect1+rect2,position.y+dimensions.y}),rotate({position.x+rect1,position.y+dimensions.y})]) color: first(colorSet).BAR2;
-		draw(left_label) at: position+rotate({x_left_label_offset, y_label_offset}) font: font(18) color:  first(colorSet).BAR1 rotate: ANGLE;	 
-		draw(right_label) at: position+rotate({dimensions.x + x_right_label_offset, y_label_offset}) font: font(18) color: first(colorSet).BAR2 rotate: ANGLE;	
+		draw polygon([rotate(position),rotate({position.x+rect1,position.y}),rotate({rect1+position.x,dimensions.y+position.y}),rotate({position.x,dimensions.y+position.y})]) color: first(colorSet).BAR2;
+		draw  polygon([rotate({position.x+rect1,position.y}),rotate({position.x+rect1+rect2,position.y}),rotate({position.x+rect1+rect2,position.y+dimensions.y}),rotate({position.x+rect1,position.y+dimensions.y})]) color: first(colorSet).BAR1;
+		draw(left_label) at: position+rotate({x_left_label_offset, y_label_offset}) font: font(18) color:  first(colorSet).BAR2 rotate: ANGLE;	 
+		draw(right_label) at: position+rotate({dimensions.x + x_right_label_offset, y_label_offset}) font: font(18) color: first(colorSet).BAR1 rotate: ANGLE;	
 		return 0;
 	}
 	
@@ -1683,9 +1703,12 @@ species legend schedules:[]
 		}else{// affichage alternatif
 		
 			//--- affichage des curseurs de la tablette
-			dummy_int <- draw_bars(energy,{800,4000}, {1500,100}, "Gasoline", "Diesel", -150, 870 - 1500,280);
-			dummy_int <- draw_bars(vehicle_2020_norm_rate,{800,4400}, {1500,100}, "Innovative", "Old", -150, 800+250 - 1500,280);
-			dummy_int <- draw_bars(percent_of_car,{800,4800}, {1500,100}, "Cars", "Motorbikes", -170, 740-260 - 1500,280);
+		//	dummy_int <- draw_bars(energy,{800,4000}, {1500,100}, "Gasoline", "Diesel", -150, 870 - 1500,280);
+		//	dummy_int <- draw_bars(vehicle_2020_norm_rate,{800,4400}, {1500,100}, "Innovative", "Old", -150, 800+250 - 1500,280);
+		//	dummy_int <- draw_bars(percent_of_car,{800,4800}, {1500,100}, "Cars", "Motorbikes", -170, 740-260 - 1500,280);
+			dummy_int <- draw_bars((1-energy),{800,4000}, {1500,100}, "Gasoline", "Diesel", -150, 870 - 1500,280);
+			dummy_int <- draw_bars((1-vehicle_2020_norm_rate),{800,4400}, {1500,100}, "Innovative", "Old", -150, 800+250 - 1500,280);
+			dummy_int <- draw_bars((1-percent_of_car),{800,4800}, {1500,100}, "Cars", "Motorbikes", -170, 740-260 - 1500,280);
 			
 
 // old parameters		
@@ -1768,12 +1791,12 @@ experiment MarrakAir type:gui
 
 
 // reglage serveur Nico
-		display Suivi_Vehicules_3D  type:opengl camera_pos: {5000,4000,8500}  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:REFRESH use_shader: true keystone: [KEYSTONE_HAUT_GAUCHE,KEYSTONE_HAUT_DROITE,KEYSTONE_BAS_GAUCHE,KEYSTONE_BAS_DROITE]  
+	//	display Suivi_Vehicules_3D  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh_every:REFRESH use_shader: true keystone: [KEYSTONE_HAUT_GAUCHE,KEYSTONE_HAUT_DROITE,KEYSTONE_BAS_GAUCHE,KEYSTONE_BAS_DROITE]   type:opengl camera_pos: {5000,4000,8500}  rotate: ANGLE   
 
 // bug gama ? si on met une variable CAMERA_POSITION dans global et qu'on met camera_pos: CAMERA_POSITION le display apparait a l'envers // issue
 
 
-//		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh: every(1#cycle) use_shader: true keystone: true//[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]  
+		display Suivi_Vehicules_3D  type:opengl  rotate: ANGLE  background:(show_keystone = true?#white:first(colorSet).BACKGROUND) refresh: every(1#cycle) /*use_shader: true*/ keystone: true draw_env:false //[{0.074,0.281},{0.937,0.267},{0.011,0.859},{0.996,0.856}]   
 
 
 		{

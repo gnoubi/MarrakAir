@@ -52,34 +52,26 @@ public class GamePresenter {
 	PieChartBox vehicleEnergy;
 	@FXML 
 	PieChartBox vehicleType;
-
 	@FXML 
 	PieChartBox vehicleAge;
-
 	@FXML
 	LineChartBox<Double, Double> pollutantGraph;
 	@FXML
 	LineChartBox<Double, Double> particulExposition;
 	@FXML
 	LineChartBox<Double, Double> CO2Production;
-
 	@FXML
 	Button showTrafficB;
 	boolean traficShow =true;
-
 	@FXML 
 	Button showPollutantB;
 	boolean pollutantShow =true;
-
 	@FXML
 	SliderBox vehicleEnergySlider;
-
 	@FXML
 	SliderBox vehicleTypeSlider;
-
 	@FXML
 	SliderBox vehicleInnovativeSlider;
-
 	@FXML
 	Button toggleLegendB;
 	boolean toggleLegend = true;
@@ -136,8 +128,6 @@ public class GamePresenter {
 				e.printStackTrace();
 			}
 		}
-
-
 	}
 
 	@FXML
@@ -189,7 +179,6 @@ public class GamePresenter {
 				showPollutantB.setText("Afficher la pollution"); 
 			}
 		}
-
 	}
 
 	@FXML
@@ -218,7 +207,6 @@ public class GamePresenter {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
 			if(toggleLegend){
 				toggleLegendB.setText("Hide Legend");
 			}else{
@@ -267,14 +255,8 @@ public class GamePresenter {
         this.image.setCache(true);
 		this.image.setFitWidth(768);
 		this.image.setPreserveRatio(true);
-
-
-
 		initializeConnection();
-
-
 		ChangeListener<? super Boolean> et = new ChangeListener() {
-
 			@Override
 			public void changed(ObservableValue observable, Object oldValue, Object newValue) {
 				change(observable,oldValue,newValue);

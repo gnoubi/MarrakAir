@@ -54,14 +54,6 @@ public class LineChartBox<X,Y> extends LineChart<X,Y> implements Observer {
 	List<InternalPlot<X, Y>> myPlots;
 	boolean start;
 	ObservableList<Series<X,Y>> myData;
-/*	public LineChartBox()
-	{
-		super((Axis<X>)new NumberAxis(), (Axis<Y>)new NumberAxis());
-		myPlots = new ArrayList<InternalPlot<X, Y>>();
-		this.setAnimated(true);
-		myData = FXCollections.observableArrayList();
-		this.setData(myData);
-	}*/
 	
 	@SuppressWarnings("unchecked")
 	public LineChartBox( Axis<X> xAxis,  Axis<Y> yAxis) {

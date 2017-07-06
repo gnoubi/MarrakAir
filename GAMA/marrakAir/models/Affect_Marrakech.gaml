@@ -1156,7 +1156,7 @@ experiment affect type:gui
 	
 	output {
 
-		display Suivi_Vehicules_3D  type:opengl background:#black refresh_every:15 //use_shader: true keystone: true //refresh_every:15 
+		display Suivi_Vehicules_3D  type:opengl background:#black refresh_every:15 draw_env:false // use_shader: true keystone: true //refresh_every:15 
 		{
 			//grid parcArea;
 			species bound aspect: base;
@@ -1187,7 +1187,7 @@ experiment affect type:gui
 			
 		}*/
 
-/*		display Emissions_Totales draw_diffuse_light:true scale:true
+		/*display Emissions_Totales draw_diffuse_light:true scale:true
 		{
 				species road aspect:base;
 				species pollutant_grid aspect:nox_aspect transparency:0.5;
