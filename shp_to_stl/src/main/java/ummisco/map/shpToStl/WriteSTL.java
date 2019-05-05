@@ -39,6 +39,11 @@ public class WriteSTL {
 		for(int t=0;t<tri.size();t++){
 			for(int g=0;g<3;g++)
 				writeIntLE(dos,0);
+			//Point3D normal = tri.get(t).getNormal();
+			//writeFloatLE(dos,normal.getX());
+			//writeFloatLE(dos,normal.getY());
+			//writeFloatLE(dos,normal.getZ());
+			
 			point=tri.get(t).getPoint3D();
 			for(int l=0;l<3;l++){
 				writeFloatLE(dos,point[l].getX());

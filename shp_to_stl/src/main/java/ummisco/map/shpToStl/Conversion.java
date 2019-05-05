@@ -22,10 +22,21 @@ public class Conversion {
 	private String hauteur;
 	private double taille;
 
+	// Elevation of the base ground of the map.
+	public static double BASE_ELEVATION = 3.0;
+	// As we suppose that all the heights are provided in cm, they have to be multiplied by HEIGHT_FACTOR to be in mm.
+	public static double HEIGHT_FACTOR = 10;
+
+	/**
+	* The main constructor of the class Conversion. The parameters come mainly from the GUI.
+	* @param coupe  size of one piece of the map (supposed to be in cm)
+	* @param taille size of the map (supposed to be in cm)
+	* @param hauteur name of the attribute in the input shapefile representing the height of the geometry (supposed to be in cm)
+	*/
 	public Conversion(int coupe,int taille, String hauteur){
-		this.coupe=coupe; //*10;
-		this.hauteur=hauteur;
-		this.taille=taille; //*10;
+		this.coupe = coupe * HEIGHT_FACTOR;
+		this.hauteur = hauteur;
+		this.taille = taille * HEIGHT_FACTOR;
 		this.gtt = new GeometryToTriangle();
 	}
 
@@ -43,7 +54,7 @@ public class Conversion {
 						Polygon polys = (Polygon) geom;
 						if(!hauteur.equals("Error")){
 							if(feature.getAttribute(hauteur)!=null)
-								liste_polygon.put(polys,(((Number)feature.getAttribute( hauteur)).doubleValue()));
+								liste_polygon.put(polys,(((Number)feature.getAttribute( hauteur)).doubleValue() * HEIGHT_FACTOR));
 							else{
 								hauteur="Error";
 								liste_polygon.put(polys,0.0);
@@ -60,7 +71,7 @@ public class Conversion {
 						for(Polygon polys:listepoly){
 							if(polys.isValid()){
 								if(feature.getAttribute(hauteur)!=null)
-									liste_polygon.put(polys,(((Number)feature.getAttribute(hauteur)).doubleValue()));
+									liste_polygon.put(polys,(((Number)feature.getAttribute(hauteur)).doubleValue()) * HEIGHT_FACTOR);
 								else{
 									hauteur="Error";
 									liste_polygon.put(polys,0.0);
@@ -80,8 +91,9 @@ public class Conversion {
 		Map<Geometry,Double> new_liste_polygon= new HashMap<Geometry,Double>();
 		Geometry limite = geo.getEnvelope();
 		Coordinate[] coord = limite.getCoordinates();
-		System.out.println("truc "+coord[0]+ " "+ coord[2]+" "+coord[1]);
-		System.out.println("taille" + taille);
+		System.out.println("[parcoursFichier]");
+		System.out.println("Min: "+coord[0]+ " -- Max: "+ coord[2]+" -- Minmax"+coord[1]);
+		System.out.println("taille : " + taille );
 		new_liste_polygon = redimensionGeometry(coord[0],coord[2],coord[1],liste_polygon, taille);
 		Geometry new_geo = regroupePolygon(new_liste_polygon);
 		decoupeGeometry(new_geo,new_liste_polygon);
@@ -95,15 +107,28 @@ public class Conversion {
 		Point minp = fact.createPoint(min);
 		Point maxp = fact.createPoint(max);
 		Point minmaxp = fact.createPoint(minmax);
-		double mulx = taillle/(minp.distance(minmaxp));
-		double muly = taillle/(maxp.distance(minmaxp));
+		// System.out.println("Min: "+minp+ " -- Max: "+ maxp+" -- Minmax"+minmaxp);		
+		// System.out.println("Distance : minp to mimaxp: " + minp.distance(minmaxp) + " -- maxp to minmaxp: " + maxp.distance(minmaxp));
+//		double mulx = taillle/(minp.distance(minmaxp));
+//		double muly = taillle/(maxp.distance(minmaxp));
+		double sizeX = maxp.distance(minmaxp);
+		double mulx = taillle/sizeX;
+		
+		System.out.println("Multiply " + " Mulx: "+mulx  );		
 		for(Entry<Geometry, Double> entry : liste_polygon.entrySet()) {
 			Coordinate[] coord = entry.getKey().getCoordinates();
 			Coordinate[] new_coord = new Coordinate[entry.getKey().getNumPoints()];
 			for(int j=0;j<entry.getKey().getNumPoints();j++){
 				Coordinate att = new Coordinate();
-				att.x=(minp.getX() + minmaxp.getX() - coord[j].x)*mulx;
-				att.y=coord[j].y*muly;
+//				att.x=(minp.getX() + minmaxp.getX() - coord[j].x)*mulx;
+//				att.y=coord[j].y*muly;
+
+//				att.x=(minp.getX() + minmaxp.getX() - coord[j].x)*mulx;				
+//				att.y = (coord[j].y) * muly ;
+//				att.x = (coord[j].x - minp.getX()) * mulx + minp.getX();
+				att.x = (maxp.getX() + minp.getX() - coord[j].x) * mulx ;
+				att.y = (coord[j].y - minp.getY()) * mulx + minp.getY();
+				
 				new_coord[j]=att;
 			}
 			new_coord[entry.getKey().getNumPoints()-1]=new_coord[0];
@@ -116,6 +141,7 @@ public class Conversion {
 
 	//Regroupe tous les polygons valide dans un MultiPolygon puis le met en Geometry
 	public Geometry regroupePolygon(Map<Geometry,Double> liste_polygon) throws IOException{
+		System.out.println("\n[regroupePolygon]");
 		int ii = 0;
 		Polygon[] tab_polys = new Polygon[liste_polygon.keySet().size()];
 		for(Geometry p:liste_polygon.keySet()){
@@ -130,6 +156,7 @@ public class Conversion {
 
 	//Divise la Geometry avec le quadrillage et l'ecrit le fichier STL
 	public void decoupeGeometry(Geometry geo,Map<Geometry,Double> liste_polygon) throws IOException{
+		System.out.println("\n[decoupeGeometry]");
 		int cpt=0;
 		Map<Geometry, Double> myMap = new HashMap<Geometry,Double>();
 		Map<Geometry, Double> valide2 = new HashMap<Geometry,Double>();
@@ -172,9 +199,14 @@ public class Conversion {
 				}
 			}
 			for(Entry<Geometry, Double> entry : myMap.entrySet()){
-				gtt.polygonSTL((Polygon)entry.getKey(), entry.getValue(),2.0);
+				
+				if(entry.getKey() instanceof Polygon) {
+					gtt.polygonSTL((Polygon)entry.getKey(), entry.getValue(), BASE_ELEVATION);
+				} else {
+					System.out.println("" + entry.getKey().getGeometryType());
+				}
 			}
-			gtt.polygonSTL((Polygon)cell,2.0,0.0);
+			gtt.polygonSTL((Polygon)cell, BASE_ELEVATION, 0.0);
 			WriteSTL write = new WriteSTL();
 			write.ecrireSTL(gtt.getListeTriangle(), cpt);
 			gtt.videListe();
@@ -186,17 +218,25 @@ public class Conversion {
 
 	//Retourne le quadrillage de la Geometry
 	public ArrayList<Geometry> quadrillage(Coordinate min, Coordinate max,Coordinate minmax, double coupe){
+		System.out.println("\n[Quadrillage]");
 		ArrayList<Geometry> quadri = new ArrayList<Geometry>();
 		GeometryFactory fact = new GeometryFactory();
 		Point minp = fact.createPoint(min);
 		Point maxp = fact.createPoint(max);
 		Point minmaxp = fact.createPoint(minmax);
+		System.out.println("Min: "+minp+ " -- Max: "+ maxp+" -- Minmax"+minmaxp);		
+		System.out.println("Distance : minp to mimaxp: " + minp.distance(minmaxp) + " -- maxp to minmaxp: " + maxp.distance(minmaxp));
+		
 		double width = Math.round(((minp.distance(minmaxp))/coupe));
 		double height = Math.round(((maxp.distance(minmaxp))/coupe));
+		
+		System.out.println("Width : " +width+ " - height: " + height + " -- width*coupe= " + width*coupe + " -- height*coupe= " + height*coupe);
 		if(width*coupe<minp.distance(minmaxp))
 			width++;
 		if(height*coupe<maxp.distance(minmaxp))
 			height++;
+		System.out.println("Width : " +width+ " - height: " + height + " -- width*coupe= " + width*coupe + " -- height*coupe= " + height*coupe);
+		
 		for(int i=0;i<height;i++){
 			for(int j=0;j<width;j++){
 				Coordinate coord1 = new Coordinate(min.x+coupe*i,min.y+coupe*j);

@@ -1,8 +1,11 @@
 package ummisco.map.shpToStl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateArrays;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPolygon;
@@ -40,21 +43,58 @@ public class GeometryToTriangle {
 			GeometryFactory fact = new GeometryFactory();
 			Coordinate[] coord = p.getCoordinates();
 			for(int i=1;i<p.getNumPoints();i++){
-				if(coord[0].x==coord[i].x && coord[0].y==coord[i].y){
+				if((coord[0].x==coord[i].x && coord[0].y==coord[i].y) && (p.getNumPoints()-i != 1)){
 					Coordinate[] new_coord = new Coordinate[i+1];
 					for(int j=0;j<=i;j++){
 						new_coord[j]=coord[j];
 					}
-					Polygon polys = fact.createPolygon(new_coord);
-					liste_polygon.add(polys);
+
+			        //Stream<Coordinate> stream1 = Arrays.stream(new_coord);
+			        //stream1.forEach(x -> System.out.print(x + " "));
+			        //System.out.println(" ");
+			        
+			        // BEN
+			        if( ( CoordinateArrays.hasRepeatedPoints(new_coord)) || ( (new_coord.length > 0) && (new_coord.length < 4) ) ) {
+						Stream<Coordinate> stream2 = Arrays.stream(new_coord);
+						stream2.forEach(x -> System.out.print(x + " "));
+						System.out.println(" ");
+						//
+						System.out.print("" + new_coord.length);
+						System.out.println("  has repeated coordinates: " + CoordinateArrays.hasRepeatedPoints(new_coord));
+						System.out.println(" ");			        	
+			        } else {
+						Polygon polys = fact.createPolygon(new_coord);
+						liste_polygon.add(polys);			        	
+			        } 
+//					Polygon polys = fact.createPolygon(new_coord);
+//					liste_polygon.add(polys);
+			        
 					Coordinate[] new_coord2 = new Coordinate[p.getNumPoints()-i];
 					int cpt = p.getNumPoints()-i;
 					for(int j=0;j<cpt;j++){
 						new_coord2[j]=coord[i];
 						i++;
 					}
-					Polygon polys2 = fact.createPolygon(new_coord2);
-					liste_polygon.add(polys2);
+
+			        //Stream<Coordinate> stream4 = Arrays.stream(new_coord2);
+			        //stream4.forEach(x -> System.out.print(x + " "));
+			        //System.out.println(" ");
+			        // BEN
+			        if( ( CoordinateArrays.hasRepeatedPoints(new_coord2)) || ( (new_coord2.length > 0) && (new_coord2.length < 4) ) ) {
+						Stream<Coordinate> stream2 = Arrays.stream(new_coord2);
+						stream2.forEach(x -> System.out.print(x + " "));
+						System.out.println(" ");
+						//
+						System.out.print("" + new_coord2.length);
+						System.out.println("  has repeated coordinates: " + CoordinateArrays.hasRepeatedPoints(new_coord2));
+						System.out.println(" ");			        	
+			        } else {
+						Polygon polys = fact.createPolygon(new_coord2);
+						liste_polygon.add(polys);			        	
+			        } 
+			        //
+//					Polygon polys2 = fact.createPolygon(new_coord2);
+//					liste_polygon.add(polys2);
 					return liste_polygon;
 				}
 			}
@@ -148,7 +188,14 @@ public class GeometryToTriangle {
 	public Polygon generateTriangle(Coordinate a, Coordinate b, Coordinate c){
 		GeometryFactory fact = new GeometryFactory();
 		Coordinate[] coords = {a,b,c,a};
+	
+		// BEN 
+	//	if(!Orientation.isCCW(coords)) {
+	//		CoordinateArrays.reverse(coords);
+	//	}
+		// 
 		Polygon newpolys =fact.createPolygon(coords);
+
 		return newpolys;
 	}
 
