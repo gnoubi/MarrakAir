@@ -46,4 +46,16 @@ public class Point3D {
 	public void setZ(float z) {
 		this.z = z;
 	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		if(!(o instanceof Point3D))
+			return false;
+		
+		Point3D r = (Point3D)o;
+		return r.x == this.x && r.y == this.y && r.z == this.z;
+	}
+	
+	
 }
