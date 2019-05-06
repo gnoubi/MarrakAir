@@ -56,4 +56,15 @@ public class Triangle {
 		return normal;
 		
 	}
+	
+	public Edge[] getEdges()
+	{
+		Edge[] res = new Edge[3];
+		for(int i = 0; i < res.length - 1; i++)
+		{
+			res[i] = new Edge(points[i],points[i+1]);
+		}
+		return res;
+	}
+	
 }

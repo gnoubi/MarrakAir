@@ -96,6 +96,9 @@ public class GeometryToTriangle {
 	//Recupere tous les triangles qui composent le polygon et les convertie en Triangle
 	public void polygonSTL(Polygon polys,double haut,double bas){
 		epaisseurTriangle(polys,haut,bas);
+		
+		getEdgesOfTriangles(polys);
+		
 		ArrayList<Polygon> triangles = new ArrayList<Polygon>();
 		triangles = trianglePolygon(polys,triangles);
 		
