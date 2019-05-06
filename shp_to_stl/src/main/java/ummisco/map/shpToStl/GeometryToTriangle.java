@@ -2,6 +2,7 @@ package ummisco.map.shpToStl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.stream.Stream;
 
 import org.locationtech.jts.geom.Coordinate;
@@ -20,9 +21,10 @@ import org.locationtech.jts.geom.Polygon;
 public class GeometryToTriangle {
 
 	private ArrayList<Triangle> liste_triangle = new ArrayList<Triangle>();
-
+	private HashMap<Edge, ArrayList<Triangle>> edges = new HashMap<Edge, ArrayList<Triangle>>();
+	
 	public GeometryToTriangle(){}
-
+	
 
 	//Divise le multipolygon en polygon
 	public ArrayList<Polygon> decomposeMultiPolygon(MultiPolygon mp){
@@ -41,6 +43,7 @@ public class GeometryToTriangle {
 	//Divise un polygone en plusieurs polygones
 		public ArrayList<Geometry> decomposePolygon(Geometry p){
 			ArrayList<Geometry> liste_polygon = new ArrayList<Geometry>();
+			edges = new HashMap<Edge, ArrayList<Triangle>>();
 			GeometryFactory fact = new GeometryFactory();
 			Coordinate[] coord = p.getCoordinates();
 			for(int i=1;i<p.getNumPoints();i++){
@@ -152,6 +155,21 @@ public class GeometryToTriangle {
 			
 			liste_triangle.add(tri);
 			liste_triangle.add(tri2);
+		}
+	}
+	
+	//Construit les triangles pour l'épaisseur
+	public void getEdgesOfTriangles(Polygon polys){
+		Coordinate[] coord_polys=polys.getCoordinates();
+		for(int i=0;i<coord_polys.length-1;i++){
+			Point3D p1 = new Point3D((float) coord_polys[i].x,0,(float) coord_polys[i].y);
+			Point3D p2 = new Point3D((float) coord_polys[i+1].x,0,(float) coord_polys[i+1].y);
+			Edge edg = new Edge(p1, p2);
+			if(!this.edges.containsKey(edg))
+			{
+				System.out.println("ADD NEW EDGE" + p1 + "  "+ p2);
+				this.edges.put(edg, new ArrayList<Triangle>());
+			}
 		}
 	}
 

@@ -47,6 +47,17 @@ public class Point3D {
 		this.z = z;
 	}
 	
+	@Override
+	public boolean equals(Object o)
+	{
+		if(!(o instanceof Point3D))
+			return false;
+		
+		Point3D r = (Point3D)o;
+		return r.x == this.x && r.y == this.y && r.z == this.z;
+	}
+	
+	
 	// scalar product between 2 vectors
 	public float scalarProduct(Point3D p) {
 		return p.x * this.x + p.y * this.y + p.z * this.z;
@@ -65,4 +76,5 @@ public class Point3D {
 	public String toString() {
 		return "X: " + getX() + " Y: " + getY() + " Z: " + getZ();
 	}
+
 }
