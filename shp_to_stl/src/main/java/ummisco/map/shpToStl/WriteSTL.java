@@ -37,12 +37,11 @@ public class WriteSTL {
 	public void ecrireTriangles(DataOutputStream dos,ArrayList<Triangle> tri) throws IOException{
 		Point3D[] point;
 		for(int t=0;t<tri.size();t++){
-			for(int g=0;g<3;g++)
-				writeIntLE(dos,0);
-			//Point3D normal = tri.get(t).getNormal();
-			//writeFloatLE(dos,normal.getX());
-			//writeFloatLE(dos,normal.getY());
-			//writeFloatLE(dos,normal.getZ());
+			//for(int g=0;g<3;g++)
+			//	writeIntLE(dos,0);
+			writeFloatLE(dos,tri.get(t).getNormal().getX());
+			writeFloatLE(dos,tri.get(t).getNormal().getY());
+			writeFloatLE(dos,tri.get(t).getNormal().getZ());
 			
 			point=tri.get(t).getPoint3D();
 			for(int l=0;l<3;l++){
