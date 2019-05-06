@@ -18,7 +18,7 @@ public class Point3D {
 	}
 
 	
-	//Modifit la coordonnees X du point 3D
+	//Modifie la coordonnees X du point 3D
 	public void setX(float x) {
 		this.x = x;
 	}
@@ -30,7 +30,7 @@ public class Point3D {
 	}
 
 	
-	//Modifit la coordonnees X du point 3D
+	//Modifie la coordonnees X du point 3D
 	public void setY(float y) {
 		this.y = y;
 	}
@@ -42,8 +42,27 @@ public class Point3D {
 	}
 
 	
-	//Modifit la coordonnees X du point 3D
+	//Modifie la coordonnees X du point 3D
 	public void setZ(float z) {
 		this.z = z;
+	}
+	
+	// scalar product between 2 vectors
+	public float scalarProduct(Point3D p) {
+		return p.x * this.x + p.y * this.y + p.z * this.z;
+	}
+	
+	// opposite vector 
+	public Point3D opposite() {
+		return new Point3D(-x,-y,-z);
+	}
+	
+	// vector between 2 points
+	public Point3D vectorBetween(Point3D p) {
+		return new Point3D(p.getX() - x, p.getY() - y, p.getZ() - z);
+	}
+	
+	public String toString() {
+		return "X: " + getX() + " Y: " + getY() + " Z: " + getZ();
 	}
 }

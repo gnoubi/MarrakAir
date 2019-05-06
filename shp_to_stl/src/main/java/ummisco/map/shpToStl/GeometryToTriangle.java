@@ -9,6 +9,7 @@ import org.locationtech.jts.geom.CoordinateArrays;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 //import com.vividsolutions.jts.geom.Coordinate;
 //import com.vividsolutions.jts.geom.Geometry;
@@ -49,25 +50,18 @@ public class GeometryToTriangle {
 						new_coord[j]=coord[j];
 					}
 
-			        //Stream<Coordinate> stream1 = Arrays.stream(new_coord);
-			        //stream1.forEach(x -> System.out.print(x + " "));
-			        //System.out.println(" ");
-			        
-			        // BEN
-			        if( ( CoordinateArrays.hasRepeatedPoints(new_coord)) || ( (new_coord.length > 0) && (new_coord.length < 4) ) ) {
+			        try {
+						Polygon polys = fact.createPolygon(new_coord);
+						liste_polygon.add(polys);			        	
+			        } catch(IllegalArgumentException e) {
+			        	System.out.println("IllegalArgumentException in [decomposePolygon]:");
 						Stream<Coordinate> stream2 = Arrays.stream(new_coord);
 						stream2.forEach(x -> System.out.print(x + " "));
 						System.out.println(" ");
 						//
 						System.out.print("" + new_coord.length);
 						System.out.println("  has repeated coordinates: " + CoordinateArrays.hasRepeatedPoints(new_coord));
-						System.out.println(" ");			        	
-			        } else {
-						Polygon polys = fact.createPolygon(new_coord);
-						liste_polygon.add(polys);			        	
-			        } 
-//					Polygon polys = fact.createPolygon(new_coord);
-//					liste_polygon.add(polys);
+			        }
 			        
 					Coordinate[] new_coord2 = new Coordinate[p.getNumPoints()-i];
 					int cpt = p.getNumPoints()-i;
@@ -76,25 +70,19 @@ public class GeometryToTriangle {
 						i++;
 					}
 
-			        //Stream<Coordinate> stream4 = Arrays.stream(new_coord2);
-			        //stream4.forEach(x -> System.out.print(x + " "));
-			        //System.out.println(" ");
-			        // BEN
-			        if( ( CoordinateArrays.hasRepeatedPoints(new_coord2)) || ( (new_coord2.length > 0) && (new_coord2.length < 4) ) ) {
-						Stream<Coordinate> stream2 = Arrays.stream(new_coord2);
+			        try {
+						Polygon polys = fact.createPolygon(new_coord2);
+						liste_polygon.add(polys);			        	
+			        } catch(IllegalArgumentException e) {
+			        	System.out.println("IllegalArgumentException in [decomposePolygon]:");
+						Stream<Coordinate> stream2 = Arrays.stream(new_coord);
 						stream2.forEach(x -> System.out.print(x + " "));
 						System.out.println(" ");
 						//
-						System.out.print("" + new_coord2.length);
-						System.out.println("  has repeated coordinates: " + CoordinateArrays.hasRepeatedPoints(new_coord2));
-						System.out.println(" ");			        	
-			        } else {
-						Polygon polys = fact.createPolygon(new_coord2);
-						liste_polygon.add(polys);			        	
-			        } 
-			        //
-//					Polygon polys2 = fact.createPolygon(new_coord2);
-//					liste_polygon.add(polys2);
+						System.out.print("" + new_coord.length);
+						System.out.println("  has repeated coordinates: " + CoordinateArrays.hasRepeatedPoints(new_coord));
+			        }
+
 					return liste_polygon;
 				}
 			}
@@ -107,6 +95,16 @@ public class GeometryToTriangle {
 		epaisseurTriangle(polys,haut,bas);
 		ArrayList<Polygon> triangles = new ArrayList<Polygon>();
 		triangles = trianglePolygon(polys,triangles);
+		
+		Point3D centroid = new Point3D(0,0,0);
+		
+		try {
+			Point poly_centroid = polys.getCentroid();
+			centroid = new Point3D((float) poly_centroid.getX(), (float) poly_centroid.getY(), 0);
+		} catch(IllegalStateException e) {
+			System.out.println("Empty polygon !!!!! so empty centroid !!!! ");
+		}
+		
 		for(Polygon p:triangles){
 			Point3D[] point = new Point3D[3];
 			Point3D[] point2 = new Point3D[3];
@@ -116,10 +114,10 @@ public class GeometryToTriangle {
 				if(haut!=0)
 					point2[i] = new Point3D((float) coord_triangle[i].x,(float)haut,(float) coord_triangle[i].y);
 			}
-			Triangle tri = new Triangle(point);
+			Triangle tri = new Triangle(point, centroid);
 			liste_triangle.add(tri);
 			if(haut!=0){
-				Triangle tri2 = new Triangle(point2);
+				Triangle tri2 = new Triangle(point2, centroid);
 				liste_triangle.add(tri2);
 			}
 		}
@@ -128,6 +126,9 @@ public class GeometryToTriangle {
 
 	//Construit les triangles pour l'épaisseur
 	public void epaisseurTriangle(Polygon polys, double hauteur,double bas){
+		Point poly_centroid = polys.getCentroid();
+		Point3D centroid = new Point3D((float) poly_centroid.getX(), (float) poly_centroid.getY(), 0);
+				
 		for(int i=0;i<polys.getNumPoints()-1;i++){
 			Point3D[] point = new Point3D[3];
 			Point3D[] point2 = new Point3D[3];
@@ -138,8 +139,10 @@ public class GeometryToTriangle {
 			point2[1]= new Point3D ((float) coord_polys[i+1].x,(float)hauteur,(float) coord_polys[i+1].y);
 			point[2]= point2[1];
 			point2[2]= point[0];
-			Triangle tri = new Triangle(point);
-			Triangle tri2 = new Triangle(point2);
+			
+			System.out.println("Centroid : " + centroid);
+			Triangle tri = new Triangle(point,centroid);
+			Triangle tri2 = new Triangle(point2,centroid);
 			liste_triangle.add(tri);
 			liste_triangle.add(tri2);
 		}
