@@ -14,6 +14,8 @@ public class Triangle {
 		normal = computeNormal();
 		
 		if(normal.scalarProduct(centroid.vectorBetween(points[0])) < 0) {
+			System.out.println("  Reverse Triangle      " );
+			
 			normal = normal.opposite();
 			
 			Point3D[] reversePoints = new Point3D[points.length];
@@ -21,6 +23,8 @@ public class Triangle {
 				reversePoints[(points.length - 1) - i] = points[i];
 			}
 			points = reversePoints;
+		} else if(normal.scalarProduct(centroid.vectorBetween(points[0])) == 0.0) {
+			System.out.println("CEntroid poitns: ortho !!!");
 		}
 	}
 
