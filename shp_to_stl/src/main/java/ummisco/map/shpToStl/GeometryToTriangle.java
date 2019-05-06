@@ -92,6 +92,7 @@ public class GeometryToTriangle {
 
 	//Recupere tous les triangles qui composent le polygon et les convertie en Triangle
 	public void polygonSTL(Polygon polys,double haut,double bas){
+		System.out.println("Poly : " + haut + " - " + bas);
 		epaisseurTriangle(polys,haut,bas);
 		ArrayList<Polygon> triangles = new ArrayList<Polygon>();
 		triangles = trianglePolygon(polys,triangles);
@@ -128,6 +129,7 @@ public class GeometryToTriangle {
 	public void epaisseurTriangle(Polygon polys, double hauteur,double bas){
 		Point poly_centroid = polys.getCentroid();
 		Point3D centroid = new Point3D((float) poly_centroid.getX(), (float) poly_centroid.getY(), 0);
+		System.out.println("-------------- Centroid : " + centroid);
 				
 		for(int i=0;i<polys.getNumPoints()-1;i++){
 			Point3D[] point = new Point3D[3];
@@ -140,9 +142,14 @@ public class GeometryToTriangle {
 			point[2]= point2[1];
 			point2[2]= point[0];
 			
-			System.out.println("Centroid : " + centroid);
+			System.out.println("     " + point[0].getX() + " - " + point[0].getY() + " -- " + point[0].getZ());
+			System.out.println("     " + point2[0].getX() + " - " + point2[0].getY() + " -- " + point2[0].getZ());
+			
 			Triangle tri = new Triangle(point,centroid);
 			Triangle tri2 = new Triangle(point2,centroid);
+			System.out.println("Normal tri : " + tri.getNormal());
+			System.out.println("normal tri2 : " + tri.getNormal());
+			
 			liste_triangle.add(tri);
 			liste_triangle.add(tri2);
 		}
