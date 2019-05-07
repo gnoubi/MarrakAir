@@ -3,11 +3,14 @@ package ummisco.map.shpToStl;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateArrays;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPolygon;
@@ -15,9 +18,14 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 import org.opengis.feature.simple.SimpleFeature;
 
+import com.aspose.threed.FileFormat;
+import com.aspose.threed.Mesh;
+import com.aspose.threed.PolygonModifier;
+import com.aspose.threed.Scene;
+import com.aspose.threed.Transform;
+
 public class Conversion {
 
-	private GeometryToTriangle gtt;
 	private double coupe;
 	private String hauteur;
 	private double taille;
@@ -37,7 +45,6 @@ public class Conversion {
 		this.coupe = coupe * HEIGHT_FACTOR;
 		this.hauteur = hauteur;
 		this.taille = taille * HEIGHT_FACTOR;
-		this.gtt = new GeometryToTriangle();
 	}
 
 
@@ -66,7 +73,7 @@ public class Conversion {
 				}
 				if(geom instanceof MultiPolygon){
 					MultiPolygon mp = (MultiPolygon) geom;
-					ArrayList<Polygon> listepoly = gtt.decomposeMultiPolygon(mp);
+					ArrayList<Polygon> listepoly = decomposeMultiPolygon(mp);
 					if(!hauteur.equals("Error")){
 						for(Polygon polys:listepoly){
 							if(polys.isValid()){
@@ -126,6 +133,8 @@ public class Conversion {
 //				att.x=(minp.getX() + minmaxp.getX() - coord[j].x)*mulx;				
 //				att.y = (coord[j].y) * muly ;
 //				att.x = (coord[j].x - minp.getX()) * mulx + minp.getX();
+				System.out.println(maxp.getX()+" " + minp.getX()+" " + coord[j].x);
+				
 				att.x = (maxp.getX() + minp.getX() - coord[j].x) * mulx ;
 				att.y = (coord[j].y - minp.getY()) * mulx + minp.getY();
 				
@@ -165,7 +174,7 @@ public class Conversion {
 		ArrayList<Geometry> liste = quadrillage(coord[0],coord[2],coord[1],coupe);
 		for(Entry<Geometry, Double> current:liste_polygon.entrySet()){
 			if(!current.getKey().isValid()){
-				ArrayList<Geometry> valide =gtt.decomposePolygon(current.getKey());
+				ArrayList<Geometry> valide =decomposePolygon(current.getKey());
 				for(int i=0;i<valide.size();i++){
 					if(!valide.get(i).isValid()){
 						
@@ -180,6 +189,7 @@ public class Conversion {
 			}
 		}
 		for(Geometry cell:liste){
+			GeometryToMesh msh = new GeometryToMesh(BASE_ELEVATION);
 			for(Entry<Geometry, Double> current:valide2.entrySet()){
 				if(current.getKey().isValid()){
 					Geometry res =cell.intersection(current.getKey());
@@ -188,7 +198,7 @@ public class Conversion {
 					if(res != null)
 						if(res instanceof MultiPolygon){
 							MultiPolygon resmul = (MultiPolygon) res;
-							ArrayList<Polygon> listepolys = gtt.decomposeMultiPolygon(resmul);
+							ArrayList<Polygon> listepolys = decomposeMultiPolygon(resmul);
 							tempRes.addAll(listepolys);
 						}
 						else 
@@ -201,19 +211,114 @@ public class Conversion {
 			for(Entry<Geometry, Double> entry : myMap.entrySet()){
 				
 				if(entry.getKey() instanceof Polygon) {
-					gtt.polygonSTL((Polygon)entry.getKey(), entry.getValue(), BASE_ELEVATION);
+					msh.loadPolygon((Polygon)entry.getKey(), entry.getValue());
 				} else {
 					System.out.println("" + entry.getKey().getGeometryType());
 				}
 			}
-			gtt.polygonSTL((Polygon)cell, BASE_ELEVATION, 0.0);
-			WriteSTL write = new WriteSTL();
-			write.ecrireSTL(gtt.getListeTriangle(), cpt);
-			gtt.videListe();
+			msh.loadPolygon((Polygon)cell, BASE_ELEVATION);
+			msh.loadPolygon((Polygon)cell, 0);
+			
+			System.out.println("Data preparation ....");
+			
+			msh.prepareAndBuildData();
+			
+			
+			
+			System.out.println("Mesh generating ....");
+			
+			
+			Mesh mesh = msh.buildMesh();
+	         // Triangulate the mesh
+            Mesh newMesh = PolygonModifier.triangulate(mesh);
+            // Replace the old mesh
+             // Triangulate the mesh
+            // Replace the old mesh
+          	Scene scene = new Scene();
+			
+			Transform tr = scene.getRootNode().createChildNode(newMesh).getTransform();
+			System.out.println("Mesh saving ...."+ "/tmp/toto"+cpt+".stl");
+	         
+			scene.save("/tmp/mesh"+cpt+".stl", FileFormat.STL_BINARY);
+			System.out.println("Next part");
+
+		//	gtt.polygonSTL((Polygon)cell, BASE_ELEVATION, 0.0);
+		//	WriteSTL write = new WriteSTL();
+		//	WriteSTLA writea = new WriteSTLA();
+			
+		//	writea.ecrireSTL(gtt.getListeTriangle(), cpt);
+		//	gtt.videListe();
 			cpt++;
 			myMap.clear();
 		}	
 	}
+	
+	
+	//Divise le multipolygon en polygon
+	public ArrayList<Polygon> decomposeMultiPolygon(MultiPolygon mp){
+		Polygon polys;
+		ArrayList<Polygon> liste_polygon = new ArrayList<Polygon>();
+		for (int i = 0; i < mp.getNumGeometries(); i++) {
+			if(mp.getGeometryN(i).isValid()){
+				polys = ((Polygon)mp.getGeometryN(i));
+				liste_polygon.add(polys);
+			}
+		}
+		return liste_polygon;
+	}
+
+	
+	//Divise un polygone en plusieurs polygones
+	public ArrayList<Geometry> decomposePolygon(Geometry p){
+		ArrayList<Geometry> liste_polygon = new ArrayList<Geometry>();
+		GeometryFactory fact = new GeometryFactory();
+		Coordinate[] coord = p.getCoordinates();
+		for(int i=1;i<p.getNumPoints();i++){
+			if((coord[0].x==coord[i].x && coord[0].y==coord[i].y) && (p.getNumPoints()-i != 1)){
+				Coordinate[] new_coord = new Coordinate[i+1];
+				for(int j=0;j<=i;j++){
+					new_coord[j]=coord[j];
+				}
+
+		        try {
+					Polygon polys = fact.createPolygon(new_coord);
+					liste_polygon.add(polys);			        	
+		        } catch(IllegalArgumentException e) {
+		        	System.out.println("IllegalArgumentException in [decomposePolygon]:");
+					Stream<Coordinate> stream2 = Arrays.stream(new_coord);
+					stream2.forEach(x -> System.out.print(x + " "));
+					System.out.println(" ");
+					//
+					System.out.print("" + new_coord.length);
+					System.out.println("  has repeated coordinates: " + CoordinateArrays.hasRepeatedPoints(new_coord));
+		        }
+		        
+				Coordinate[] new_coord2 = new Coordinate[p.getNumPoints()-i];
+				int cpt = p.getNumPoints()-i;
+				for(int j=0;j<cpt;j++){
+					new_coord2[j]=coord[i];
+					i++;
+				}
+
+		        try {
+					Polygon polys = fact.createPolygon(new_coord2);
+					liste_polygon.add(polys);			        	
+		        } catch(IllegalArgumentException e) {
+		        	System.out.println("IllegalArgumentException in [decomposePolygon]:");
+					Stream<Coordinate> stream2 = Arrays.stream(new_coord);
+					stream2.forEach(x -> System.out.print(x + " "));
+					System.out.println(" ");
+					//
+					System.out.print("" + new_coord.length);
+					System.out.println("  has repeated coordinates: " + CoordinateArrays.hasRepeatedPoints(new_coord));
+		        }
+
+				return liste_polygon;
+			}
+		}
+		return liste_polygon;
+	}
+
 
 
 	//Retourne le quadrillage de la Geometry
