@@ -22,6 +22,7 @@
         <version>4.11</version>
         <scope>test</scope>
     </dependency>
+    
     <dependency>
         <groupId>org.geotools</groupId>
         <artifactId>gt-shapefile</artifactId>
@@ -32,6 +33,11 @@
         <artifactId>gt-swing</artifactId>
         <version>${geotools.version}</version>
     </dependency>
+    <dependency>
+    <groupId>com.aspose</groupId>
+    <artifactId>aspose-3d</artifactId>
+    <version>19.2</version>
+</dependency>
 </dependencies>
 
   <repositories>
@@ -53,6 +59,11 @@
           <name>Boundless Maven Repository</name>
           <url>http://repo.boundlessgeo.com/main</url>
       </repository>
+      <repository>
+    		<id>AsposeJavaAPI</id>
+    		<name>Aspose Java API</name>
+    	<url>https://repository.aspose.com/repo/</url>
+	</repository>
   </repositories>
       <build>
         <plugins>
