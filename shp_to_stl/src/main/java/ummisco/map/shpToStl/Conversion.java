@@ -13,6 +13,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateArrays;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
@@ -61,7 +62,10 @@ public class Conversion {
 						Polygon polys = (Polygon) geom;
 						if(!hauteur.equals("Error")){
 							if(feature.getAttribute(hauteur)!=null)
-								liste_polygon.put(polys,(((Number)feature.getAttribute( hauteur)).doubleValue() * HEIGHT_FACTOR));
+							{
+								System.out.println("hauteur "+ (((Number)feature.getAttribute( hauteur)).doubleValue() * HEIGHT_FACTOR));
+								liste_polygon.put(polys,(((Number)feature.getAttribute( hauteur)).doubleValue() * HEIGHT_FACTOR));								
+							}
 							else{
 								hauteur="Error";
 								liste_polygon.put(polys,0.0);
@@ -135,7 +139,7 @@ public class Conversion {
 //				att.x = (coord[j].x - minp.getX()) * mulx + minp.getX();
 				System.out.println(maxp.getX()+" " + minp.getX()+" " + coord[j].x);
 				
-				att.x = (maxp.getX() + minp.getX() - coord[j].x) * mulx ;
+				att.x = (coord[j].x - minp.getX()) * mulx + minp.getX() ;
 				att.y = (coord[j].y - minp.getY()) * mulx + minp.getY();
 				
 				new_coord[j]=att;
@@ -190,8 +194,18 @@ public class Conversion {
 		}
 		for(Geometry cell:liste){
 			GeometryToMesh msh = new GeometryToMesh(BASE_ELEVATION);
+			
+			
 			for(Entry<Geometry, Double> current:valide2.entrySet()){
-				if(current.getKey().isValid()){
+				if(current.getKey().isValid() && current.getKey() instanceof Polygon){
+//					System.out.println("cell -----");
+//					for(Coordinate c:cell.getCoordinates())
+//						System.out.print("("+c.x+ " " + c.y+')');
+//					System.out.println("\ncurrent -----");
+//					for(Coordinate c:current.getKey().getCoordinates())
+//						System.out.print("("+c.x+ " " + c.y+')');
+//					System.out.println("\n ---XXXX- \n\n\n\n\n\n");
+//					
 					Geometry res =cell.intersection(current.getKey());
 					if(!res.equals(cell)){
 					ArrayList<Geometry> tempRes = new ArrayList<Geometry>();
@@ -206,6 +220,7 @@ public class Conversion {
 					for(Geometry g:tempRes)
 						myMap.put(g, current.getValue());
 					}
+
 				}
 			}
 			for(Entry<Geometry, Double> entry : myMap.entrySet()){
